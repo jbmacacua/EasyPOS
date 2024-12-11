@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons'; // Import icons for the tabs
 import { View } from 'react-native';
 import Octicons from '@expo/vector-icons/Octicons';
+import '../../global.css';
 
 export default function TabsLayout() {
   return (

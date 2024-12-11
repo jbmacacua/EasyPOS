@@ -54,7 +54,7 @@ class LargeSecureStore {
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error("Supabase URL and Anon Key must be defined");
 }
-console.log("SUPABASE_URL", SUPABASE_URL);
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     storage: new LargeSecureStore(),
