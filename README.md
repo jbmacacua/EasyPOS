@@ -1,51 +1,73 @@
-# Welcome to your Expo app 👋
-
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
-
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 # EasyPOS
+
+## Overview
+**EasyPOS** is an Android-based Point-of-Sale (POS) and accounting system designed to simplify sales, inventory, and financial management for small businesses and aspiring entrepreneurs. This all-in-one solution integrates key features such as barcode scanning, centralized data access, and real-time reporting to enhance operational efficiency and decision-making.
+
+---
+
+## Features
+
+### Barcode Scanning
+- Utilizes the phone's camera for scanning barcodes.
+- Eliminates the need for additional hardware.
+
+### Centralized Database
+- Provides real-time access to data from anywhere.
+- Includes a robust accounting system to manage sales, expenses, and inventory.
+
+### Sales Dashboard
+- Displays summaries of sales for daily, weekly, and monthly periods.
+- Offers quick insights into business performance.
+
+### Top-Selling Items
+- Highlights the best-performing products.
+- Enables informed restocking decisions.
+
+---
+
+## Beneficiaries
+
+### Small Businesses
+- Tailored for businesses without a POS or accounting system.
+- Enables efficient sales and financial tracking.
+
+### Aspiring Entrepreneurs
+- Provides a ready-to-use solution for starting a business.
+
+---
+
+## Pages/Modules
+
+### Dashboard
+- Key performance metrics, including:
+  - Total sales (daily, weekly, monthly).
+  - Graphical representation of sales trends.
+  - Overall profit/loss summary.
+
+### Top-Selling Items
+- Lists the best-selling products by category or time period.
+- Tracks performance trends to optimize inventory management.
+
+### Inventory Management
+- Add, edit, and track product details.
+- Automatic stock level updates after each sale.
+
+### Sales Processing
+- Barcode scanning for quick item addition to the cart.
+- Generates digital and printable receipts.
+
+### Reports
+- Summaries of earnings and net income.
+
+### User Management
+- Secure login for administrators and employees.
+- Role-based access to sensitive data and functionalities.
+
+### Multi-Branch Support
+- Manage sales and inventory across multiple locations.
+
+---
+
+## Benefits
+This system empowers small business owners by combining POS efficiency with essential accounting tools. With EasyPOS, businesses can make data-driven decisions, optimize inventory, and streamline operations effectively.
+
