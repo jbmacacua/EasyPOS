@@ -1,31 +1,22 @@
-import { Text, View, TouchableOpacity } from 'react-native'
-import React from 'react'
-import { useRouter } from 'expo-router'
+import React from "react";
+import { View, Text } from "react-native";
 
-const loginHeader = () => {
-    const router = useRouter()
+export default function loginHeader() {
+  return (
+    <View className="bg-[#3C80B4] pb-5 relative overflow-hidden">
+      {/* Blobs in the background */}
+      <View className="absolute top-[50] left-0">
+        <View className="bg-[#3F89C1] w-[150px] h-[150px] rounded-tr-full opacity-100"></View>
+      </View>
+      <View className="absolute top-5 right-[-100]">
+        <View className="bg-[#3F89C1] w-[450px] h-[450px] rounded-t-full opacity-100"></View>
+      </View>
 
-    return (
-        <View>
-            <View className="bg-[#3C80B4] pb-12">
-                <View className="flex-row items-center justify-between pl-10 pt-10">
-                    <Text className="text-white text-[32px] font-bold text-center">EasyPOS</Text>
-                </View>
-            </View>
-            <View className="bg-white rounded-t-[65px] pb-4">
-                {/* Login/Register Tabs */}
-                <View className="flex-row justify-center mt-4 py-12">
-                    <TouchableOpacity className="border-b-2 border-[#3C80B4] px-4 pb-2"
-                    onPress={() => router.push('/auth/login')}>
-                        <Text className="text-[#3C80B4] text-xl font-semibold">Login</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity className="px-4 pb-2" onPress={() => router.push('/auth/register')}>
-                        <Text className="text-gray-500 text-xl">Register</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-        </View>
-    )
+      {/* Header Content */}
+      <View className="flex-row items-center justify-between px-10 pt-5 z-10">
+        {/* App Name */}
+        <Text className="text-white text-[32px] font-bold">EasyPOS</Text>
+      </View>
+    </View>
+  );
 }
-
-export default loginHeader
