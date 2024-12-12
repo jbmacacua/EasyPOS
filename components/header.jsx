@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
+import { Feather } from "@expo/vector-icons";
 
-export default function loginHeader() {
+export default function Header() {
   return (
     <View className="bg-[#3C80B4] pb-5 relative overflow-hidden">
       {/* Blobs in the background */}
@@ -16,6 +17,11 @@ export default function loginHeader() {
       <View className="flex-row items-center justify-between px-10 pt-5 z-10">
         {/* App Name */}
         <Text className="text-white text-[32px] font-bold">EasyPOS</Text>
+
+        {/* Settings Icon */}
+        <TouchableOpacity>
+          <Feather name="settings" size={34} color="white" />
+        </TouchableOpacity>
       </View>
     </View>
   );
