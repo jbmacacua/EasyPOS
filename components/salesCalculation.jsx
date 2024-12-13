@@ -182,7 +182,6 @@ export default function SalesCalculation({ activeTab }) {
                             fontSize: 12,
                         },
                     }}
-                    bezier
                     style={{
                         borderRadius: 16,
                     }}

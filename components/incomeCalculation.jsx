@@ -175,14 +175,13 @@ export default function SalesCalculation({ activeTab }) {
                         },
                         propsForDots: {
                             r: "2",
-                            strokeWidth: "2",
+                            strokeWidth: "3",
                             stroke: "#1C547E",
                         },
                         propsForVerticalLabels: {
                             fontSize: 12,
                         },
                     }}
-                    bezier
                     style={{
                         borderRadius: 16,
                     }}

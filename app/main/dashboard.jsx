@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import Header from "@components/header";
 import SalesCalculation from "@components/salesCalculation";
 import IncomeCalculation from "@components/incomeCalculation";
+import MostSoldItems from "@components/mostSoldItems";
+import RestockItems from "@components/restockItems";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("Daily"); // State to track the active tab
@@ -61,7 +63,7 @@ export default function Dashboard() {
 
 
         {/* Scrollable content */}
-        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 8 }}>
+        <ScrollView  contentContainerStyle={{ padding: 8 }}>
           {/* Sales Calculation */}
           <View className="mb-3 w-[95%] mx-auto">
             <SalesCalculation activeTab={activeTab} />
@@ -70,6 +72,17 @@ export default function Dashboard() {
           {/* Income Calculation */}
           <View className="mb-3 w-[95%] mx-auto">
             <IncomeCalculation activeTab={activeTab} />
+          </View>
+
+          
+          {/* Most Sold Items */}
+          <View className="mb-3 w-[95%] mx-auto">
+            <MostSoldItems activeTab={activeTab} />
+          </View>
+
+          {/* Restock Items */}
+          <View className="mb-3 w-[95%] mx-auto">
+            <RestockItems />
           </View>
         </ScrollView>
       </View>
