@@ -97,9 +97,9 @@ export default function SalesCalculation({ activeTab }) {
             <View className="mb-4 flex-row justify-between items-center">
                 {/* Header with total sales */}
                 <View className="w-1/2">
-                    <Text className="text-[15px] font-bold text-[#3C80B4]">Sales Calculation</Text>
+                    <Text className="text-[15px] font-bold text-[#3C80B4]">Income Calculation</Text>
                     <Text className="text-[13px] text-[#3C80B4]">
-                        Total Sales: P{calculateTotal()}
+                        Total Income: P{calculateTotal()}
                     </Text>
                 </View>
 
