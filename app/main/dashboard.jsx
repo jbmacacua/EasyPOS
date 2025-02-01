@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import Header from "../../components/header";
-import SalesCalculation from "../../components/salesCalculation";
+import Header from "@components/header";
+import SalesCalculation from "@components/salesCalculation";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("Daily"); // State to track the active tab

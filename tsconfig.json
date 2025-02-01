@@ -3,27 +3,27 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@main*": [
-        "./app/main*"
-      ],
-      "@components/*": [
-        "./components/*"
-      ],
-      "@assets/*": [
-        "./assets/*"
-      ],
-      "@helper/*": [
-        "./helper/*"
-      ],
-      "@services/*": [
-        "./services/*"
-      ],
-      "@hooks/*": [
-        "./hooks/*"
-      ],
-      "@lib/*": [
-        "./lib/*"
-      ]
+        "@main*": [
+          "./app/main*",
+        ],
+        "@components/*": [
+          "./components/*"
+        ],
+        "@assets/*": [
+          "./assets/*"
+        ],
+        "@helper/*": [
+          "./helper/*"
+        ],
+        "@services/*": [
+          "./services/*"
+        ],
+        "@hooks/*": [
+          "./hooks/*"
+        ],
+        "@lib/*": [
+          "./lib/*"
+        ]
     }
   },
   "include": [
