@@ -1,12 +1,35 @@
-import { Text, View } from 'react-native'
-import React from 'react'
+import React, { useState } from "react";
+import { View, Text, ScrollView } from "react-native";
+import Header from "@components/header";
+import Tabs from "@components/tabs"; // Import the Tabs component
+import TotalIncome from "@components/totalIncome";
+import SalesSummary from "@components/salesSummary";
 
-const sales = () => {
+export default function Sales() {
+  const [activeTab, setActiveTab] = useState("Daily"); // State to track the active tab
+
   return (
-    <View className="flex-1 justify-center items-center">
-      <Text className="text-lg font-bold text-blue-500">sales</Text>
-    </View>
-  )
-}
+    <View className="bg-[#3F89C1] flex-1">
+      {/* Header */}
+      <Header />
 
-export default sales
+      <View className="bg-white rounded-t-[65px] flex-1">
+        <Text className="text-[#3C80B4] text-[20px] font-bold text-center py-5">Sales Summary</Text>
+        
+        {/* Tabs Component */}
+        <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
+
+        {/* Scrollable content */}
+        <ScrollView contentContainerStyle={{ padding: 8 }}>
+          {/* Total Income */}
+          <View className="mb-3 w-[95%] mx-auto">
+            <TotalIncome activeTab={activeTab} />
+          </View>
+          <View className="mb-3 w-[95%] mx-auto">
+            <SalesSummary activeTab={activeTab} />
+          </View>
+        </ScrollView>
+      </View>
+    </View>
+  );
+}
