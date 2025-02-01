@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { View, Text, TextInput, FlatList, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "@components/header";
-import InventoryItem from "@components/inventoryItem";
-import BarcodeScanner from "@components/barcodeScanner";
+import InventoryItem from "@components/inventory/inventoryItem";
+import BarcodeScanner from "./barcodeScanner";
 
 const Inventory = () => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -13,7 +13,7 @@ const Inventory = () => {
     Array.from({ length: 5 }).map((_, index) => ({
       id: index + 1,
       name: `Product Name ${index + 1}`,
-      stockLeft: 12345 - index * 1000, // Adjusted stockLeft values for clarity
+      stockLeft: 12345 - index * 1000, 
       barcode: 67890,
       price: 20.0,
       date: "2022-10-28",
