@@ -1,14 +1,15 @@
 
+import { View, Text } from 'react-native'
+import React from 'react'
+import { Stack } from "expo-router"
 
-import { Stack } from 'expo-router';
-import 'react-native-reanimated';
-import "../global.css";
-
-export default function RootLayout() {
+const AppLayout = () => {
   return (
-      <Stack screenOptions={{headerShown: false}}>
-        <Stack.Screen name="main"/>
-        <Stack.Screen name="+not-found"/>
-      </Stack>
-  );
+	<Stack screenOptions={{headerShown: false}} >
+		<Stack.Screen name="auth" />
+		<Stack.Screen name="main" />
+	</Stack>
+  )
 }
+
+export default AppLayout

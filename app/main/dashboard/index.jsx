@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import Header from "@components/header";
 import SalesCalculation from "@components/salesCalculation";
 import IncomeCalculation from "@components/incomeCalculation";
