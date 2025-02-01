@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { View, Text, TextInput, FlatList, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "@components/header";
+import InventoryItem from "@components/inventoryItem";
+import BarcodeScanner from "@components/barcodeScanner";
 
 const Inventory = () => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -43,22 +45,6 @@ const Inventory = () => {
     setData([...data].reverse());
   };
 
-  const renderItem = ({ item }) => (
-    <View className="flex-row items-center border border-gray-200 p-3 my-2">
-      <Text className="text-lg font-bold text-gray-700">{item.id}.</Text>
-      <View className="flex-1 ml-4">
-        <Text className="text-base font-bold text-gray-900">{item.name}</Text>
-        <Text className="text-sm text-gray-500">
-          Stock No: {item.stockLeft} | Php {item.price.toFixed(2)}
-        </Text>
-        <Text className="text-sm text-gray-500">
-          Bar code No: {item.barcode}
-        </Text>
-      </View>
-      <Text className="text-sm text-gray-400">{item.date}</Text>
-    </View>
-  );
-
   return (
     <View className="bg-[#3F89C1] flex-1">
       <Header />
@@ -75,8 +61,7 @@ const Inventory = () => {
                 placeholderTextColor="#999"
               />
             </View>
-            <View className="w-3" />
-            <TouchableOpacity className="p-2 bg-gray-100 rounded-full" onPress={() => setShowDropdown(!showDropdown)}>
+            <TouchableOpacity className="p-2 bg-gray-100 rounded-full mx-3" onPress={() => setShowDropdown(!showDropdown)}>
               <Ionicons name="filter" size={24} color="#666" />
             </TouchableOpacity>
             {showDropdown && (
@@ -101,7 +86,6 @@ const Inventory = () => {
                 </TouchableOpacity>
               </View>
             )}
-            <View className="w-3" />
             <TouchableOpacity className="p-2 bg-gray-100 rounded-full" onPress={toggleSortOrder}>
               <Ionicons name="swap-vertical" size={24} color="#666" />
             </TouchableOpacity>
@@ -111,17 +95,12 @@ const Inventory = () => {
         <FlatList
           data={data}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
+          renderItem={({ item }) => <InventoryItem item={item} />}
           contentContainerStyle={{ paddingBottom: 100 }}
         />
 
         {/* Barcode Scanner Button */}
-        <TouchableOpacity
-          className="absolute bottom-6 right-6 bg-[#3F89C1] p-4 rounded-full shadow-lg"
-          onPress={() => console.log("Barcode scanner activated")}
-        >
-          <Ionicons name="barcode" size={28} color="white" />
-        </TouchableOpacity>
+        <BarcodeScanner />
       </View>
     </View>
   );
