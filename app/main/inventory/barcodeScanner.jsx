@@ -72,12 +72,12 @@ const BarcodeScanner = () => {
             </Text>
           </View>
           <View className="flex-row justify-between p-6">
-            <Pressable className="flex-1 bg-[#007DA5] py-2 rounded-3xl mr-2" onPress={() => setBarcodeData(null)}>
+            <Pressable className="flex-1 bg-[#3C80B4] py-2 rounded-3xl mr-2" onPress={() => setBarcodeData(null)}>
               <Text className="text-white text-center font-semibold">Cancel</Text>
             </Pressable>
             {!checking && (
               <Pressable
-                className="flex-1 bg-[#007DA5] py-2 rounded-3xl ml-2"
+                className="flex-1 bg-[#3C80B4] py-2 rounded-3xl ml-2"
                 onPress={() => {
                   setBarcodeData(null); 
                   router.push("/main/inventory/addProduct");
