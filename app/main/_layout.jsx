@@ -54,24 +54,28 @@ export default function TabsLayout() {
         name="dashboard"
         options={{
           headerShown: false,
+          tabBarShowLabel: false,
         }}
       />
       <Tabs.Screen
         name="sales"
         options={{
           headerShown: false,
+          tabBarShowLabel: false,
         }}
       />
       <Tabs.Screen
         name="inventory"
         options={{
           headerShown: false,
+          tabBarShowLabel: false,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           headerShown: false,
+          tabBarShowLabel: false,
         }}
       />
     </Tabs>
