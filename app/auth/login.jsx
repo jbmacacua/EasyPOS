@@ -1,38 +1,38 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
 import LoginForm from '@components/loginForm';
-import RegisterForm from '@components/registerForm'; // Assuming you have a register form
+import RegisterForm from '@components/registerForm';
 import LoginHeader from '@components/loginHeader';
-
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberPassword, setRememberPassword] = useState(false);
-  const [isLogin, setIsLogin] = useState(true); 
-
+  const [isLogin, setIsLogin] = useState(true);
+  const [role, setRole] = useState(null); // Add state for role
 
   return (
-    <View className="bg-[#3F89C1] pb-4 flex-1">
-      <LoginHeader />  
+    <View className="flex-1 bg-[#3F89C1] pb-4">
+      <LoginHeader />
+
       {/* Login/Register Tabs */}
-      <View className="flex-row justify-center py-12 bg-white rounded-t-[65px]">
-        <TouchableOpacity
-          className="px-4"
-          onPress={() => setIsLogin(true)} // Toggle to login form
-        >
-          <Text className={`text-xl ${isLogin ? 'font-semibold text-[#3C80B4]' : 'text-gray-500'}`}>Login</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="px-4"
-          onPress={() => setIsLogin(false)} // Toggle to register form
-        >
-          <Text className={`text-xl ${!isLogin ? 'font-semibold text-[#3C80B4]' : 'text-gray-500'}`}>Register</Text>
-        </TouchableOpacity>
+      <View className="flex-row justify-center py-10 bg-white rounded-t-[50px]">
+        {['Login', 'Register'].map((tab, index) => {
+          const isActive = (isLogin && tab === 'Login') || (!isLogin && tab === 'Register');
+          return (
+            <TouchableOpacity
+              key={tab}
+              className="px-6"
+              onPress={() => setIsLogin(index === 0)}
+            >
+              <Text className={`text-xl ${isActive ? 'font-semibold text-[#3C80B4]' : 'text-gray-500'}`}>{tab}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      {/* Content below the tabs */}
-      <View className="h-full bg-white">
+      {/* Login/Register Form */}
+      <View className="flex-1 bg-white px-6 pt-6">
         {isLogin ? (
           <LoginForm
             email={email}
@@ -41,6 +41,7 @@ const Login = () => {
             setPassword={setPassword}
             rememberPassword={rememberPassword}
             setRememberPassword={setRememberPassword}
+            setRole={setRole} // Pass setRole to LoginForm
           />
         ) : (
           <RegisterForm
