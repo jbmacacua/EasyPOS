@@ -17,12 +17,31 @@ const Inventory = () => {
 
   const loadProducts = async () => {
     try {
-      const storedProducts = await AsyncStorage.getItem("products");
-      if (storedProducts) {
-        setData(JSON.parse(storedProducts));
-      }
+      let storedProducts = await AsyncStorage.getItem("products");
+      let products = storedProducts ? JSON.parse(storedProducts) : [];
+  
+      // Define dummy data to be added
+      const dummyData = [
+          { id: 1, productName: "Instant Noodles (Lucky Me)", price: 30, quantity: 10 },
+          { id: 2, productName: "Sachet Coffee (Nescafe 3-in-1)", price: 15, quantity: 20 },
+          { id: 3, productName: "Sachet Shampoo (Pantene)", price: 25, quantity: 15 },
+          { id: 4, productName: "Canned Tuna (555 Tuna)", price: 50, quantity: 5 },
+          { id: 5, productName: "Canned Sardines (Mega)", price: 40, quantity: 7 },
+          { id: 6, productName: "Pack of Salt (Martha's)", price: 20, quantity: 30 },
+          { id: 7, productName: "Pack of Rice (NFA)", price: 150, quantity: 25 },
+          { id: 8, productName: "5L Cooking Oil (Minola)", price: 350, quantity: 8 },
+          { id: 9, productName: "Laundry Detergent (Surf)", price: 100, quantity: 10 },
+      ];
+  
+      // Add the dummy data to the existing products
+      products = [...products, ...dummyData];
+  
+      // Reassign IDs to ensure they are sequential (1, 2, 3, ...)
+      products = products.map((p, index) => ({ ...p, id: index + 1 }));
+  
+      setData(products);
     } catch (error) {
-      console.error("Error loading products:", error);
+        console.error("Error adding products:", error);
     }
   };
 

@@ -5,23 +5,23 @@ export default function MostSoldItems({ activeTab }) {
     const [loading, setLoading] = useState(true);
     const [products, setProducts] = useState([]);
 
-    // Separate arrays for dummy data
+    // Separate arrays for realistic dummy data in the Philippines
     const dailyData = Array.from({ length: 10 }, (_, i) => ({
         id: (i + 1).toString(),
-        name: `Daily Product ${String.fromCharCode(65 + i)}`, // A, B, C...
-        sold: 50 + i * 5, // 50, 55, 60...
+        name: ["Pandesal", "Sachet Coffee", "Bottled Water", "Cup Noodles", "Soft Drinks", "Siomai", "Street BBQ", "Banana Cue", "Turon", "Corn on Cob"][i],
+        sold: 30 + i * 10, // More realistic sales numbers
     }));
 
     const weeklyData = Array.from({ length: 5 }, (_, i) => ({
         id: (i + 1).toString(),
-        name: `Weekly Product ${String.fromCharCode(75 - i)}`, // K, J, I...
-        sold: 100 + i * 15, // 100, 115, 130...
+        name: ["Rice (5kg)", "Cooking Oil (1L)", "Canned Sardines", "Instant Noodles Pack", "Eggs (1 dozen)"][i],
+        sold: 80 + i * 20, // Weekly sales of common grocery items
     }));
 
     const monthlyData = Array.from({ length: 8 }, (_, i) => ({
         id: (i + 1).toString(),
-        name: `Monthly Product ${String.fromCharCode(85 + i)}`, // U, V, W...
-        sold: 200 + i * 20, // 200, 220, 240...
+        name: ["Sack of Rice (25kg)", "Laundry Detergent (1.5kg)", "Toiletries Set", "Gasul LPG Tank", "Vitamin C Bottle", "Coffee Refill Pack", "Diapers Pack", "Shampoo Refill Pack"][i],
+        sold: 150 + i * 30, // Monthly purchases with moderate variations
     }));
 
     useEffect(() => {

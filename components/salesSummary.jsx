@@ -5,30 +5,33 @@ export default function SalesSummary({ activeTab }) {
     const [loading, setLoading] = useState(true);
     const [products, setProducts] = useState([]);
 
+    const items = ["555 Tuna", "Nescafe 3-in-1", "Lucky Me Instant Noodles", "Pantene Shampoo", "Minola Cooking Oil", "NFA Rice", "Surf Laundry Detergent", "Martha's Salt", "Mega Sardines", "Century Tuna"];
+
     // Dummy data
     const dailyData = Array.from({ length: 10 }, (_, i) => ({
         id: (i + 1).toString(),
-        name: `Daily Product ${String.fromCharCode(65 + i)}`,
-        price: 50 + i * 5,
-        quantity: 10 + i * 2,
-        total: (50 + i * 5) * (10 + i * 2),
+        name: items[i],
+        price: (i + 1) * 15 + 30,  // Starting price around PHP 30, increases gradually
+        quantity: 5 + i * 2,  // Quantities starting at 5, increasing by 2
+        total: ((i + 1) * 15 + 30) * (5 + i * 2),
     }));
 
     const weeklyData = Array.from({ length: 5 }, (_, i) => ({
         id: (i + 1).toString(),
-        name: `Weekly Product ${String.fromCharCode(75 - i)}`,
-        price: 100 + i * 15,
-        quantity: 20 + i * 3,
-        total: (100 + i * 15) * (20 + i * 3),
+        name: items[i],
+        price: (i + 1) * 15 + 30,  // Starting price around PHP 30, increases gradually
+        quantity: 10 + i * 3,  // Quantities starting at 10, increasing by 3
+        total: ((i + 1) * 25 + 100) * (10 + i * 3),
     }));
 
     const monthlyData = Array.from({ length: 8 }, (_, i) => ({
         id: (i + 1).toString(),
-        name: `Monthly Product ${String.fromCharCode(85 + i)}`,
-        price: 200 + i * 20,
-        quantity: 30 + i * 4,
-        total: (200 + i * 20) * (30 + i * 4),
+        name: items[i],
+        price: (i + 1) * 15 + 30,  // Starting price around PHP 30, increases gradually
+        quantity: 20 + i * 4,  // Quantities starting at 20, increasing by 4
+        total: ((i + 1) * 50 + 250) * (20 + i * 4),
     }));
+
 
     const totalOverall = products.reduce((sum, product) => sum + product.total, 0);
 
@@ -66,9 +69,9 @@ export default function SalesSummary({ activeTab }) {
                 {products.map((item, index) => (
                     <View key={item.id} className={`flex-row flex-wrap items-center p-2 ${index % 2 === 0 ? 'bg-blue-200' : 'bg-blue-100'}`}>
                         <Text className="flex-1 text-black text-center">{item.name}</Text>
-                        <Text className="w-20 text-black text-center">${item.price}</Text>
+                        <Text className="w-20 text-black text-center">Php {item.price}</Text>
                         <Text className="w-20 text-black text-center">{item.quantity}</Text>
-                        <Text className="w-20 text-black text-center">{item.total}</Text>
+                        <Text className="w-20 text-black text-center">Php {item.total}</Text>
                     </View>
                 ))}
 

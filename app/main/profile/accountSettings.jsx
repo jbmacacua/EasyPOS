@@ -66,7 +66,7 @@ export default function AccountSettings() {
                                 editable={editable}
                                 value={form.firstName}
                                 onChangeText={(text) => handleInputChange("firstName", text)}
-                                placeholder="Cris"
+                                placeholder="Nicolas"
                             />
                         </View>
                         <View className="w-[48%]">
@@ -76,7 +76,7 @@ export default function AccountSettings() {
                                 editable={editable}
                                 value={form.lastName}
                                 onChangeText={(text) => handleInputChange("lastName", text)}
-                                placeholder="Manyakis"
+                                placeholder="Fabillar"
                             />
                         </View>
                     </View>
@@ -87,7 +87,7 @@ export default function AccountSettings() {
                         editable={editable}
                         value={form.contactNumber}
                         onChangeText={(text) => handleInputChange("contactNumber", text)}
-                        placeholder="Contact Number"
+                        placeholder="09222124534"
                     />
 
                     <Text className="font-semibold mt-4 mb-1">Email:</Text>
@@ -96,7 +96,7 @@ export default function AccountSettings() {
                         editable={editable}
                         value={form.email}
                         onChangeText={(text) => handleInputChange("email", text)}
-                        placeholder="Email Address"
+                        placeholder="Nicolas@email.com"
                     />
 
                     <Text className="font-semibold mt-4 mb-1">Address:</Text>

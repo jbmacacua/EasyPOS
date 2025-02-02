@@ -7,16 +7,16 @@ export default function RestockItems({}) {
 
     // Item arrays for dummy data
     const items = [
-        { id: '1', name: 'Item A', quantity: 10 },
-        { id: '2', name: 'Item B', quantity: 15 },
-        { id: '3', name: 'Item C', quantity: 20 },
-        { id: '4', name: 'Item D', quantity: 25 },
-        { id: '5', name: 'Item E', quantity: 30 },
-        { id: '6', name: 'Item F', quantity: 35 },
-        { id: '7', name: 'Item G', quantity: 40 },
-        { id: '8', name: 'Item H', quantity: 45 },
-        { id: '9', name: 'Item I', quantity: 50 },
-        { id: '10', name: 'Item J', quantity: 55 },
+        { id: '1', name: 'Pandesal', quantity: 10 },
+        { id: '2', name: 'Sachet Coffee', quantity: 15 },
+        { id: '3', name: 'Bottled Water', quantity: 20 },
+        { id: '4', name: 'Cup Noodles', quantity: 25 },
+        { id: '5', name: 'Soft Drinks', quantity: 30 },
+        { id: '6', name: 'Siomai', quantity: 35 },
+        { id: '7', name: 'Street BBQ', quantity: 40 },
+        { id: '8', name: 'Banana Cue', quantity: 45 },
+        { id: '9', name: 'Turon', quantity: 50 },
+        { id: '10', name: 'Corn on Cob', quantity: 55 },
     ];
 
     useEffect(() => {

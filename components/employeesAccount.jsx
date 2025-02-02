@@ -69,14 +69,14 @@ const EmployeesAccount = () => {
     {
       id: 1,
       picture: "https://randomuser.me/api/portraits/men/1.jpg",
-      name: "John Doe",
+      name: "Employee Jr",
       contactNo: "123-456-7890",
-      position: "Sales Manager",
+      position: "Sales",
     },
     {
       id: 2,
       picture: "https://randomuser.me/api/portraits/women/2.jpg",
-      name: "Jane Smith",
+      name: "Joana Marie",
       contactNo: "987-654-3210",
       position: "Sales",
     },

@@ -17,7 +17,7 @@ export default function TotalIncome({ activeTab }) {
         return Math.max(0, baseValue + fluctuation); // Ensure no negative values
     };
 
-    // Dummy data for each period with random values
+    // Dummy data for each period with adjusted values ensuring weekly > daily and monthly > weekly (at least 4x)
     const dailyData = Array.from({ length: 10 }, (_, i) => ({
         id: (i + 1).toString(),
         name: `Daily Product ${String.fromCharCode(65 + i)}`,
@@ -27,13 +27,13 @@ export default function TotalIncome({ activeTab }) {
     const weeklyData = Array.from({ length: 5 }, (_, i) => ({
         id: (i + 1).toString(),
         name: `Weekly Product ${String.fromCharCode(75 - i)}`,
-        sold: getRandomFluctuation(100 + i * 15), // Fluctuating values
+        sold: getRandomFluctuation((50 + i * 5) * 5), // Ensuring at least 4x daily sales
     }));
 
     const monthlyData = Array.from({ length: 8 }, (_, i) => ({
         id: (i + 1).toString(),
         name: `Monthly Product ${String.fromCharCode(85 + i)}`,
-        sold: getRandomFluctuation(200 + i * 20), // Fluctuating values
+        sold: getRandomFluctuation((50 + i * 5) * 20), // Ensuring at least 4x weekly sales
     }));
 
     useEffect(() => {

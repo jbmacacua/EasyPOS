@@ -29,9 +29,9 @@ const Profile = () => {
                 <Feather name="user" size={32} color="black" />
               </View>
               <View className="ml-8">
-                <Text className="text-lg font-semibold">Bermuda ni Bermundo</Text>
-                <Text className="text-gray-600">092134534</Text>
-                <Text className="text-gray-600">jimel@email.com</Text>
+                <Text className="text-lg font-semibold">Nicolas Fabillar</Text>
+                <Text className="text-gray-600">09222124534</Text>
+                <Text className="text-gray-600">Nicolas@email.com</Text>
               </View>
             </View>
 

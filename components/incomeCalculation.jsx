@@ -26,10 +26,17 @@ export default function SalesCalculation({ activeTab }) {
     const { daysInMonth, totalWeeks, day, currentWeek, month } = getDaysAndWeeks();
     const [selectedFilter, setSelectedFilter] = useState(1); // Default to the first filter option
 
-    // Dummy sales data
-    const dailySalesData = [1000, 1500, 1200, 1800, 2000, 1300, 1000, 1000, 2000]; // Simulated hourly data for daily
-    const weeklySalesData = [10000, 12000, 9000, 11000, 9500, 10000, 1000]; // Simulated sales data for weeks
-    const monthlySalesData = [30000, 40000, 35000, 42000]; // Simulated sales data for months
+    const dailySalesData = [823, 1187, 1023, 1578, 2124, 1389, 954, 1097, 1932]; // Simulated sales data with exact numbers
+    const dailyCostOfGoods = [500, 720, 600, 900, 1100, 750, 480, 570, 1050]; // Estimated cost of goods for daily sales
+    const dailyIncomeData = dailySalesData.map((sales, i) => sales - dailyCostOfGoods[i]); // Income calculation for daily sales
+
+    const weeklySalesData = [9023, 11478, 8475, 10456, 9812, 10189, 10987]; // More precise weekly sales figures
+    const weeklyCostOfGoods = [5000, 6200, 4800, 5500, 5300, 5400, 5900]; // Estimated cost of goods for weekly sales
+    const weeklyIncomeData = weeklySalesData.map((sales, i) => sales - weeklyCostOfGoods[i]); // Income calculation for weekly sales
+
+    const monthlySalesData = [28145, 39123, 33267, 41289]; // Realistic monthly sales variations with exact figures
+    const monthlyCostOfGoods = [15000, 21000, 18000, 22000]; // Estimated cost of goods for monthly sales
+    const monthlyIncomeData = monthlySalesData.map((sales, i) => sales - monthlyCostOfGoods[i]); // Income calculation for monthly sales
 
     // Reset selectedFilter when activeTab changes
     useEffect(() => {
@@ -47,11 +54,11 @@ export default function SalesCalculation({ activeTab }) {
         let data = [];
 
         if (activeTab === "Daily") {
-            data = dailySalesData;
+            data = dailyIncomeData;
         } else if (activeTab === "Weekly") {
-            data = weeklySalesData;
+            data = weeklyIncomeData;
         } else if (activeTab === "Monthly") {
-            data = monthlySalesData;
+            data = monthlyIncomeData;
         }
 
         // If no data, return [0] to prevent errors
