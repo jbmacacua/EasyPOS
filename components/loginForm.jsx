@@ -3,15 +3,16 @@ import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import Icon from "react-native-vector-icons/FontAwesome";
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../context/authContext'; // Import the global auth context
 
-const LoginForm = ({ email, setEmail, password, setPassword, rememberPassword, setRememberPassword, setRole }) => {
+const LoginForm = ({ email, setEmail, password, setPassword, rememberPassword, setRememberPassword }) => {
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
+    const { setUserRole } = useAuth(); // Use global role setter
 
     useEffect(() => {
         const initializeStorage = async () => {
             try {
-                // Check if credentials exist in AsyncStorage, otherwise set defaults
                 const storedEmail = await AsyncStorage.getItem('email');
                 const storedPassword = await AsyncStorage.getItem('password');
                 const storedRole = await AsyncStorage.getItem('role');
@@ -35,26 +36,28 @@ const LoginForm = ({ email, setEmail, password, setPassword, rememberPassword, s
 
     const handleLogin = async () => {
         try {
-            // Fetch stored credentials
             const adminEmail = await AsyncStorage.getItem('email');
             const adminPassword = await AsyncStorage.getItem('password');
             const adminRole = await AsyncStorage.getItem('role');
-    
+
             const employeeEmail = await AsyncStorage.getItem('email_employee');
             const employeePassword = await AsyncStorage.getItem('password_employee');
             const employeeRole = await AsyncStorage.getItem('role_employee');
-    
+
             if ((email === adminEmail && password === adminPassword) || (email === employeeEmail && password === employeePassword)) {
                 const userRole = email === adminEmail ? adminRole : employeeRole;
-                setRole(userRole);
                 
-                console.log("User Role:", userRole); 
+                // Set role globally
+                setUserRole(userRole);
+                
+                console.log("User Role:", userRole);
+                
                 if (rememberPassword) {
                     await AsyncStorage.setItem('email', email);
                     await AsyncStorage.setItem('password', password);
                     await AsyncStorage.setItem('role', userRole);
                 }
-    
+
                 // Navigate based on role
                 if (userRole === 'admin') {
                     router.push('/main/dashboard');
@@ -68,7 +71,7 @@ const LoginForm = ({ email, setEmail, password, setPassword, rememberPassword, s
             console.error("Error logging in:", error);
         }
     };
-    
+
     return (
         <View>
             <View className="px-8 mt-4 py-7">

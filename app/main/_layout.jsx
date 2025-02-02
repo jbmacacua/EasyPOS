@@ -4,23 +4,10 @@ import { View } from 'react-native';
 import Octicons from '@expo/vector-icons/Octicons';
 import '../../global.css';
 import { useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../../context/authContext';
 
 export default function TabsLayout() {
-  const [userRole, setUserRole] = useState(null);
-
-  useEffect(() => {
-    const getUserRole = async () => {
-      try {
-        const role = await AsyncStorage.getItem('role'); 
-        setUserRole(role);
-      } catch (error) {
-        console.error('Error fetching role:', error);
-      }
-    };
-
-    getUserRole();
-  }, []);
+  const { userRole } = useAuth();
 
   return (
     <Tabs
@@ -68,7 +55,7 @@ export default function TabsLayout() {
         options={{
           headerShown: false,
           tabBarShowLabel: false,
-          href: userRole === 'employee' ? null : undefined, 
+          href: userRole === 'employee' ? null : undefined,
         }}
       />
 
