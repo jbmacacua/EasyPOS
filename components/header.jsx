@@ -1,8 +1,11 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 export default function Header() {
+  const navigation = useNavigation(); // Get navigation object
+
   return (
     <View className="bg-[#3C80B4] pb-5 relative overflow-hidden">
       {/* Blobs in the background */}
@@ -19,7 +22,7 @@ export default function Header() {
         <Text className="text-white text-[32px] font-bold">EasyPOS</Text>
 
         {/* Settings Icon */}
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("settings")}>
           <Feather name="settings" size={34} color="white" />
         </TouchableOpacity>
       </View>
