@@ -3,9 +3,12 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Swipeable } from 'react-native-gesture-handler'; // Import Swipeable
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const AddedProductComponent = () => {
-    const [addedProducts, setAddedProducts] = useState([]); // Define the state for added products
+    const [addedProducts, setAddedProducts] = useState([]); 
+     const router = useRouter();
+
 
     useEffect(() => {
         const loadProducts = async () => {
@@ -42,13 +45,23 @@ const AddedProductComponent = () => {
 
     const handleConfirm = () => {
         // Handle the confirmation logic (e.g., finalizing the order, etc.)
-        console.log('Confirm button pressed');
+        router.push('/main/sales');
     };
 
-    const handleCancel = () => {
-        // Handle the cancel logic (e.g., clearing selections or closing modal)
-        console.log('Cancel button pressed');
+    const handleCancel = async () => {
+        try {
+            // Clear the AsyncStorage data
+            await AsyncStorage.removeItem("addedProducts");
+            
+            // Update state to empty array
+            setAddedProducts([]);
+            
+            console.log("All products removed");
+        } catch (error) {
+            console.error("Error clearing added products:", error);
+        }
     };
+    
 
     // Calculate total price and quantity
     const totalPrice = addedProducts.reduce((total, product) => total + product.price * product.quantity, 0);
