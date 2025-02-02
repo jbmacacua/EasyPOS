@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Modal, TouchableOpacity, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Modal, TouchableOpacity, Pressable, ActivityIndicator, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CameraView, Camera } from "expo-camera";
 import { useRouter } from "expo-router";
@@ -94,40 +94,41 @@ const SaleBarcodeScanner = () => {
         setProductAdded(true);
         setBarcodeData(null);
         setScanned(false);
-    
-        // Create a new product object
+
         const newProduct = {
             name: barcodeData.name,
             description: barcodeData.description,
             price: barcodeData.price,
             quantity: quantity,
         };
-    
+
         try {
-            // Retrieve existing products from AsyncStorage
             const storedProducts = await AsyncStorage.getItem("addedProducts");
             const products = storedProducts ? JSON.parse(storedProducts) : [];
-    
-            // Add the new product to the array
+
             products.push(newProduct);
-    
-            // Save the updated products array back to AsyncStorage
+
             await AsyncStorage.setItem("addedProducts", JSON.stringify(products));
-    
+
             console.log("Product added:", newProduct);
         } catch (error) {
             console.error("Error adding product:", error);
         }
-    
+
         setTimeout(() => {
             setProductAdded(false);
         }, 2000);
     };
-    
 
 
     const incrementQuantity = () => setQuantity(quantity + 1);
     const decrementQuantity = () => setQuantity(quantity > 1 ? quantity - 1 : 1);
+
+    const handleQuantityChange = (text) => {
+        if (text === "" || /^[1-9]\d*$/.test(text)) {
+            setQuantity(text === "" ? "" : parseInt(text));
+        }
+    };
 
     if (hasPermission === null) {
         return <Text style={{ textAlign: "center", fontSize: 18, color: "#666" }}>Requesting for camera permission</Text>;
@@ -175,7 +176,13 @@ const SaleBarcodeScanner = () => {
                                 <TouchableOpacity onPress={decrementQuantity} style={{ padding: 10, backgroundColor: "#3C80B4", borderRadius: 5, marginRight: 10 }}>
                                     <Text style={{ color: "white", fontSize: 20 }}>-</Text>
                                 </TouchableOpacity>
-                                <Text style={{ fontSize: 18, fontWeight: "bold", marginHorizontal: 20, color: "black" }}>{quantity}</Text>
+                                <TextInput
+                                    style={{}}
+                                    value={String(quantity)}
+                                    keyboardType="numeric"
+                                    onChangeText={handleQuantityChange}
+                                    className="text-center text-lg border border-[#ddd] rounded-lg mx-3"
+                                />
                                 <TouchableOpacity onPress={incrementQuantity} style={{ padding: 10, backgroundColor: "#3C80B4", borderRadius: 5, marginLeft: 10 }}>
                                     <Text style={{ color: "white", fontSize: 20 }}>+</Text>
                                 </TouchableOpacity>

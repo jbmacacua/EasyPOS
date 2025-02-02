@@ -1,18 +1,19 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView } from "react-native";
+import React from "react";
+import { View, ScrollView } from "react-native";
+import { GestureHandlerRootView, PanGestureHandler } from "react-native-gesture-handler"; // Import gesture handlers
 import Header from "@components/header";
 import AddedProductComponent from "@components/employeeSales/addedProductComponent";
 
 export default function AddedProducts() {
-
   return (
-    <View className="bg-[#3F89C1] flex-1">
-      {/* Header */}
-      <Header />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View className="bg-[#3F89C1] flex-1">
+        <Header />
 
-      <View className="bg-white rounded-t-[65px] flex-1">
-        <AddedProductComponent />
+        <View className="bg-white rounded-t-[65px] flex-1">
+          <AddedProductComponent />
+        </View>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 }
