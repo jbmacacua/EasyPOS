@@ -1,5 +1,7 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, FlatList, TouchableOpacity } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useState, useCallback } from "react";
+import { View, Text, FlatList, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "@components/header";
 import InventoryItem from "@components/inventory/inventoryItem";
@@ -9,16 +11,44 @@ const Inventory = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState(null);
   const [isAscending, setIsAscending] = useState(true);
-  const [data, setData] = useState(
-    Array.from({ length: 5 }).map((_, index) => ({
-      id: index + 1,
-      name: `Product Name ${index + 1}`,
-      stockLeft: 12345 - index * 1000, 
-      barcode: 67890,
-      price: 20.0,
-      date: "2022-10-28",
-    }))
+  const [data, setData] = useState([]);
+
+  const loadProducts = async () => {
+    try {
+      const storedProducts = await AsyncStorage.getItem("products");
+      if (storedProducts) {
+        setData(JSON.parse(storedProducts));
+      }
+    } catch (error) {
+      console.error("Error loading products:", error);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadProducts();
+    }, [])
   );
+
+  const handleDelete = async (id) => {
+    try {
+      let storedProducts = await AsyncStorage.getItem("products");
+      let products = storedProducts ? JSON.parse(storedProducts) : [];
+  
+      // Remove the item with the given id
+      products = products.filter((p) => p.id !== id);
+  
+      // Reassign IDs to ensure they are sequential (1, 2, 3, ...)
+      products = products.map((p, index) => ({ ...p, id: index + 1 }));
+  
+      await AsyncStorage.setItem("products", JSON.stringify(products));
+      setData(products);
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    }
+  };
+  
+
 
   const handleFilter = (filter) => {
     setSelectedFilter(filter);
@@ -26,7 +56,7 @@ const Inventory = () => {
 
     let sortedData = [...data];
     if (filter === "name") {
-      sortedData.sort((a, b) => a.name.localeCompare(b.name));
+      sortedData.sort((a, b) => a.productName.localeCompare(b.productName));
     } else if (filter === "date") {
       sortedData.sort((a, b) => new Date(a.date) - new Date(b.date));
     } else if (filter === "quantity") {
@@ -95,9 +125,10 @@ const Inventory = () => {
         <FlatList
           data={data}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <InventoryItem item={item} />}
+          renderItem={({ item }) => <InventoryItem item={item} onDelete={handleDelete} />}
           contentContainerStyle={{ paddingBottom: 100 }}
         />
+
 
         {/* Barcode Scanner Button */}
         <BarcodeScanner />
