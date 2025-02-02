@@ -3,9 +3,19 @@ import { Feather } from "@expo/vector-icons";
 import React from 'react';
 import Header from "@components/header";
 import { useRouter } from "expo-router";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Profile = () => {
   const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('user'); // Remove stored user credentials
+      router.push("/auth/login"); // Redirect to login page
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   return (
     <View className="bg-[#3F89C1] flex-1">
@@ -37,14 +47,15 @@ const Profile = () => {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Logout Button */}
           <View className="mt-auto">
-            <TouchableOpacity className="bg-[#007DA5] py-3 rounded-xl" onpPress={() => router.push("/auth/login")}>
+            <TouchableOpacity className="bg-[#007DA5] py-3 rounded-xl" onPress={handleLogout}>
               <Text className="text-white text-center font-semibold text-lg">Logout</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
-
     </View>
   );
 };
