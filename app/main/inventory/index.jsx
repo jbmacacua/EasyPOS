@@ -6,12 +6,14 @@ import { Ionicons } from "@expo/vector-icons";
 import Header from "@components/header";
 import InventoryItem from "@components/inventory/inventoryItem";
 import BarcodeScanner from "./barcodeScanner";
+import { useAuth } from '../../../context/authContext';
 
 const Inventory = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState(null);
   const [isAscending, setIsAscending] = useState(true);
   const [data, setData] = useState([]);
+  const { userRole } = useAuth();
 
   const loadProducts = async () => {
     try {
@@ -131,7 +133,7 @@ const Inventory = () => {
 
 
         {/* Barcode Scanner Button */}
-        <BarcodeScanner />
+        {userRole !== 'employee' && <BarcodeScanner />}
       </View>
     </View>
   );
