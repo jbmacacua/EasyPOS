@@ -1,10 +1,14 @@
 import { Tabs } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons'; // Import icons for the tabs
+import { MaterialIcons } from '@expo/vector-icons';
 import { View } from 'react-native';
 import Octicons from '@expo/vector-icons/Octicons';
 import '../../global.css';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/authContext';
 
 export default function TabsLayout() {
+  const { userRole } = useAuth();
+
   return (
     <Tabs
       screenOptions={({ route }) => ({
@@ -22,9 +26,7 @@ export default function TabsLayout() {
             case 'inventory':
               return (
                 <View
-                  className={`w-12 h-12 rounded-full ${
-                    focused ? 'bg-white' : 'bg-transparent'
-                  } flex items-center justify-center`}
+                  className={`w-12 h-12 rounded-full ${focused ? 'bg-white' : 'bg-transparent'} flex items-center justify-center`}
                 >
                   <Octicons name="checklist" size={24} color={color} />
                 </View>
@@ -40,9 +42,7 @@ export default function TabsLayout() {
           }
           return (
             <View
-              className={`w-12 h-12 rounded-full ${
-                focused ? 'bg-white' : 'bg-transparent'
-              } flex items-center justify-center`}
+              className={`w-12 h-12 rounded-full ${focused ? 'bg-white' : 'bg-transparent'} flex items-center justify-center`}
             >
               <MaterialIcons name={iconName} size={28} color={color} />
             </View>
@@ -55,8 +55,10 @@ export default function TabsLayout() {
         options={{
           headerShown: false,
           tabBarShowLabel: false,
+          href: userRole === 'employee' ? null : undefined,
         }}
       />
+
       <Tabs.Screen
         name="sales"
         options={{
