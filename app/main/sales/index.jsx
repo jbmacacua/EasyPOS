@@ -4,6 +4,7 @@ import Header from "@components/header";
 import Tabs from "@components/tabs"; // Import the Tabs component
 import TotalIncome from "@components/totalIncome";
 import SalesSummary from "@components/salesSummary";
+import SalesBarcodeScanner from "./salesBarcodeScanner";
 
 export default function Sales() {
   const [activeTab, setActiveTab] = useState("Daily"); // State to track the active tab
@@ -29,6 +30,8 @@ export default function Sales() {
             <SalesSummary activeTab={activeTab} />
           </View>
         </ScrollView>
+
+        <SalesBarcodeScanner />
       </View>
     </View>
   );
