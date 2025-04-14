@@ -1,28 +1,80 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'; // Add ActivityIndicator
 import Icon from 'react-native-vector-icons/MaterialIcons'; // For eye icon
+import { useSession } from '../context/auth';
 
 const RegisterForm = () => {
-    const [name, setName] = useState('');
+    const { signUp } = useSession();
+
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [address, setAddress] = useState('');
     const [contactNumber, setContactNumber] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [loading, setLoading] = useState(false); // Loading state
+
+    const handleRegister = async (firstName, lastName, contactNumber, address, email, password, confirmPassword) => {
+        try {
+            // Simple field validation
+            if (!firstName || !lastName || !contactNumber || !address || !email || !password || !confirmPassword) {
+                Alert.alert('All fields are required');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                Alert.alert('Passwords do not match');
+                return;
+            }
+
+            setLoading(true); // Start loading
+
+            await signUp(firstName, lastName, contactNumber, address, email, password);
+
+            setLoading(false); // End loading
+
+            // Handle success (e.g., navigate to a different screen or show a success message)
+        } catch (err) {
+            console.error('Registration error:', err);
+            setLoading(false); // End loading in case of error
+        }
+    };
 
     return (
         <View className="flex-1 bg-white px-6 py-8">
 
             {/* Form Fields */}
             <View>
-                {/* Name */}
+                {/* Last Name */}
                 <View className="mb-4">
                     <TextInput
                         className="border-b border-[#3C80B4] pb-2 text-lg"
-                        placeholder="Name"
-                        value={name}
-                        onChangeText={setName}
+                        placeholder="First Name"
+                        value={firstName}
+                        onChangeText={setFirstName}
+                    />
+                </View>
+
+                {/* Last Name */}
+                <View className="mb-4">
+                    <TextInput
+                        className="border-b border-[#3C80B4] pb-2 text-lg"
+                        placeholder="Last Name"
+                        value={lastName}
+                        onChangeText={setLastName}
+                    />
+                </View>
+
+                {/* Address */}
+                <View className="mb-4">
+                    <TextInput
+                        className="border-b border-[#3C80B4] pb-2 text-lg"
+                        placeholder="Address"
+                        value={address}
+                        onChangeText={setAddress}
                     />
                 </View>
 
@@ -34,7 +86,7 @@ const RegisterForm = () => {
                         value={contactNumber}
                         onChangeText={setContactNumber}
                         keyboardType="phone-pad"
-                    />            
+                    />
                 </View>
 
                 {/* Email Address */}
@@ -45,7 +97,7 @@ const RegisterForm = () => {
                         value={email}
                         onChangeText={setEmail}
                         keyboardType="email-address"
-                    />      
+                    />
                 </View>
 
                 {/* Password */}
@@ -77,14 +129,22 @@ const RegisterForm = () => {
                         <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
                             <Icon name={showConfirmPassword ? 'visibility' : 'visibility-off'} size={20} color="gray" />
                         </TouchableOpacity>
-                    </View>          
+                    </View>
                 </View>
             </View>
 
-            {/* Next Button */}
+            {/* Submit Button */}
             <View className="mt-6">
-                <TouchableOpacity className="bg-[#3C80B4] py-3 rounded-lg mx-auto w-60">
-                    <Text className="text-white text-center text-lg font-semibold">Submit</Text>
+                <TouchableOpacity
+                    className="bg-[#3C80B4] py-3 rounded-lg mx-auto w-60"
+                    onPress={() => handleRegister(firstName, lastName, contactNumber, address, email, password, confirmPassword)}
+                    disabled={loading} // Disable button while loading
+                >
+                    {loading ? (
+                        <ActivityIndicator size="small" color="white" /> // Show loading spinner
+                    ) : (
+                        <Text className="text-white text-center text-lg font-semibold">Submit</Text>
+                    )}
                 </TouchableOpacity>
             </View>
         </View>

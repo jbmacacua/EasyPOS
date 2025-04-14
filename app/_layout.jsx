@@ -1,16 +1,16 @@
 import React from 'react';
 import { Stack } from 'expo-router';
-import { AuthProvider } from '../context/authContext'; // Import AuthProvider
+import { SessionProvider } from '../context/auth';
 
 const AppLayout = () => {
   return (
-    <AuthProvider>
+    <SessionProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="auth" />
         <Stack.Screen name="main" />
         <Stack.Screen name="settings" />
       </Stack>
-    </AuthProvider>
+    </SessionProvider>
   );
 };
 
