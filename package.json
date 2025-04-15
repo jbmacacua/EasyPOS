@@ -27,6 +27,7 @@
     "@rneui/themed": "^4.0.0-rc.8",
     "@supabase/supabase-js": "^2.47.3",
     "aes-js": "^3.1.2",
+    "base64-arraybuffer": "^1.0.2",
     "expo": "~52.0.18",
     "expo-blur": "~14.0.1",
     "expo-camera": "~16.0.14",
