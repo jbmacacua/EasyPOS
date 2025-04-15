@@ -147,6 +147,10 @@ export function SessionProvider({ children }: PropsWithChildren) {
             setSession(null);
             setUserRole(null);
 
+            setTimeout(() => {
+              router.push("/");
+          }, 500);
+
           } catch (error) {
             Alert.alert('Logout Failed', 'An error occurred while logging out. Please try again.');
           }

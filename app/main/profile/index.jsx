@@ -9,10 +9,11 @@ import { getUserDetails } from "../../../api/accounts";
 
 const Profile = () => {
   const router = useRouter();
-  const { session } = useSession();
+  const { session, signOut } = useSession();
 
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true); // Loading state
+  const [logoutLoading, setLogoutLoading] = useState(false);
 
   const parsedSession = useMemo(() => {
     try {
@@ -43,10 +44,13 @@ const Profile = () => {
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem('user');
-      router.push("/auth/login");
+      setLogoutLoading(true); // Start loading
+      await signOut();
     } catch (error) {
       console.error("Error logging out:", error);
+      Alert.alert('Logout Failed', 'An error occurred while logging out. Please try again.');
+    } finally {
+      setLogoutLoading(false); // Stop loading
     }
   };
 
@@ -101,9 +105,17 @@ const Profile = () => {
 
           {/* Logout Button */}
           <View className="mt-auto">
-            <TouchableOpacity className="bg-[#007DA5] py-3 rounded-xl" onPress={handleLogout}>
+          <TouchableOpacity
+            className="bg-[#007DA5] py-3 rounded-xl flex-row items-center justify-center"
+            onPress={handleLogout}
+            disabled={logoutLoading}
+          >
+            {logoutLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
               <Text className="text-white text-center font-semibold text-lg">Logout</Text>
-            </TouchableOpacity>
+            )}
+          </TouchableOpacity>
           </View>
         </View>
       </View>

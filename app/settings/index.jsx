@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native"; // Import navigation
-import SettingsHeader from "@components/settingsHeader";
+import { useNavigation } from "@react-navigation/native";
 
-// Import section components
+import SettingsHeader from "@components/settingsHeader";
+import { useSession } from "@context/auth";
+
+// Section components
 import BusinessInformation from "@components/businessInformation";
 import EmployeesAccount from "@components/employeesAccount";
 import AboutUs from "@components/aboutUs";
@@ -13,22 +15,45 @@ export default function Settings() {
   const [selectedSection, setSelectedSection] = useState(null);
   const navigation = useNavigation();
 
+  const { session, userRole } = useSession();
+
+  const parsedSession = useMemo(() => {
+    try {
+      return session ? JSON.parse(session) : null;
+    } catch (error) {
+      console.warn("Failed to parse session:", error);
+      return null;
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (!parsedSession) {
+      navigation.replace("/");
+    } else if (userRole === "sales") {
+      setSelectedSection("about");
+    }
+  }, [parsedSession, userRole]);
+
   const handleBack = () => {
-    if (selectedSection) {
-      setSelectedSection(null);
-    } else {
+    if (userRole === "sales") {
       navigation.goBack();
+    } else {
+      if (selectedSection) {
+        setSelectedSection(null);
+      } else {
+        navigation.goBack();
+      }
     }
   };
 
-  // Determine which icon to show
-  const editButton = selectedSection === "employees"
-    ? "add"
-    : selectedSection === "about"
+  const editButton =
+    selectedSection === "employees"
+      ? "add"
+      : selectedSection === "about"
       ? "none"
       : selectedSection
-        ? "edit"
-        : null;
+      ? "edit"
+      : null;
 
   return (
     <View className="bg-[#3F89C1] flex-1">
@@ -40,13 +65,12 @@ export default function Settings() {
             ? selectedSection === "business"
               ? "Business Information"
               : selectedSection === "employees"
-                ? "Employees Account"
-                : selectedSection === "about"
-                  ? "About Us"
-                  : ""
+              ? "Employees Account"
+              : selectedSection === "about"
+              ? "About Us"
+              : ""
             : "Settings"}
         </Text>
-
 
         {/* Render the selected section or show the settings list */}
         {selectedSection === "business" && <BusinessInformation />}
@@ -84,4 +108,3 @@ export default function Settings() {
     </View>
   );
 }
-

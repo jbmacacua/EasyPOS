@@ -21,6 +21,12 @@ export default function AccountSettings() {
         }
     }, [session]);
 
+    useEffect(() => {
+        if (!parsedSession) {
+            router.replace("/");
+        }
+    }, [parsedSession]);
+
     const [editable, setEditable] = useState(false);
     const [image, setImage] = useState(null);
     const [initialImage, setInitialImage] = useState(null);
