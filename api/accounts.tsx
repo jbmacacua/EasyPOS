@@ -110,3 +110,56 @@ export async function uploadProfileImage(
   }
 }
 
+export async function changePassword(
+  currentPassword: string,
+  password: string,
+  confirmPassword: string,
+  userId: string,
+) {
+  try {
+    if (!userId) {
+      throw new Error("User is not logged in");
+    }
+
+    if (!currentPassword || !password || !confirmPassword) {
+      throw new Error("All fields are required");
+    }
+
+    if (password !== confirmPassword) {
+      throw new Error("Passwords must be the same");
+    }
+
+    // Fetch user email to reauthenticate
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser();
+
+    if (userError || !user?.email) {
+      throw new Error("Failed to retrieve user information.");
+    }
+
+    // Reauthenticate user with current password
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+
+    if (signInError) {
+      throw new Error("Current password is incorrect.");
+    }
+
+    // Proceed with password update
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    return { success: true };
+
+  } catch (err: any) {
+    return { success: false, error: err.message || String(err) };
+  }
+}
+
