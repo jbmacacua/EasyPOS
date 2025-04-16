@@ -12,6 +12,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   session?: string | null;
   userRole?: string | null;
+  businessId?: string | null;
   isLoading: boolean;
 }
 
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType>({
     signOut: async () => {},
     session: null,
     userRole: null,
+    businessId: null,
     isLoading: false,
 });
 
@@ -34,6 +36,7 @@ export function useSession() {
 export function SessionProvider({ children }: PropsWithChildren) {
   const [[isLoading, session], setSession] = useStorageState("session");
   const [userRole, setUserRole] = React.useState<string | null>(null);
+  const [businessId, setBusinessId] = React.useState<string | null>(null);
 
   const router = useRouter()
 
@@ -66,8 +69,20 @@ export function SessionProvider({ children }: PropsWithChildren) {
                 Alert.alert('Login Failed', 'User record does not exist.');
                 return false;
               }
+
+              const { data: memberDetails, error: memberDetailsError } = await supabase
+                .from("business_members")
+                .select("business_id")
+                .eq("user_id", userId)
+                .single();
+              
+              if (memberDetailsError || !memberDetails) {
+                Alert.alert('Login Failed', 'User is not a member of any business');
+                return false;
+              }
           
               setUserRole(userDetails?.role);
+              setBusinessId(memberDetails?.business_id);
               setSession(JSON.stringify(data.session));
           
               return true;
@@ -136,30 +151,29 @@ export function SessionProvider({ children }: PropsWithChildren) {
                   console.log("Business Insert Error:", businessInsertError);
                 } 
 
-                const { data: userDetails, error: userDetailsError } = await supabase
+                const { data: businessDetails, error: businessDetailsError } = await supabase
                   .from("business_details")
                   .select("id")
                   .eq("created_by", data?.session?.user?.id)
                   .single();
 
-                if (userDetailsError) {
-                    throw userDetailsError
+                if (businessDetailsError) {
+                    throw businessDetailsError
                 }
                 
                 const { error: memberInsertError } = await supabase.from('business_members').insert([
                   {
                     user_id: data?.session?.user?.id,
-                    business_id: userDetails.id
+                    business_id: businessDetails.id
                   }
                 ]);
 
-                if (businessInsertError) {
+                if (memberInsertError) {
                   console.log("Member Insert Error:", memberInsertError);
                 }   
                 
                 setUserRole('owner');
-
-                Alert.alert('Regitration Success', 'Redirecting');
+                setBusinessId(businessDetails.id);
             
                 setTimeout(() => {
                     router.push("/main/dashboard");
@@ -178,6 +192,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
             
             setSession(null);
             setUserRole(null);
+            setBusinessId(null);
 
             setTimeout(() => {
               router.push("/");
@@ -189,6 +204,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         },
         session,
         userRole,
+        businessId,
         isLoading,
       }}
     >

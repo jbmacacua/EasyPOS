@@ -1,19 +1,38 @@
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "@components/header";
 import InventoryItem from "@components/inventory/inventoryItem";
 import BarcodeScanner from "./barcodeScanner";
-import { useAuth } from '../../../context/authContext';
+
+import { getProducts } from "../../../api/inventory";
+
+import { useSession } from "@context/auth";
 
 const Inventory = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState(null);
   const [isAscending, setIsAscending] = useState(true);
   const [data, setData] = useState([]);
-  const { userRole } = useAuth();
+  const { session, userRole, businessId } = useSession();
+
+  const parsedSession = useMemo(() => {
+    try {
+      return session ? JSON.parse(session) : null;
+    } catch (error) {
+      console.warn("Failed to parse session:", error);
+      return null;
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (!parsedSession) {
+      navigation.replace("/");
+    }
+  }, [parsedSession]);
+
 
   const loadProducts = async () => {
     try {
@@ -152,7 +171,7 @@ const Inventory = () => {
 
 
         {/* Barcode Scanner Button */}
-        {userRole !== 'employee' && <BarcodeScanner />}
+        {userRole !== 'sales' && <BarcodeScanner />}
       </View>
     </View>
   );
