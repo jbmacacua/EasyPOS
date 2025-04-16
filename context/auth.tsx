@@ -121,11 +121,43 @@ export function SessionProvider({ children }: PropsWithChildren) {
                     }
                 ]);
 
-                setUserRole('owner');
-            
                 if (insertError) {
                     console.log("Insert Error:", insertError);
                 }
+
+                const {error: businessInsertError } = await supabase.from('business_details').insert([
+                  {
+                    created_by: data?.session?.user?.id,
+                  }
+                ])
+                .single();  
+
+                if (businessInsertError) {
+                  console.log("Business Insert Error:", businessInsertError);
+                } 
+
+                const { data: userDetails, error: userDetailsError } = await supabase
+                  .from("business_details")
+                  .select("id")
+                  .eq("created_by", data?.session?.user?.id)
+                  .single();
+
+                if (userDetailsError) {
+                    throw userDetailsError
+                }
+                
+                const { error: memberInsertError } = await supabase.from('business_members').insert([
+                  {
+                    user_id: data?.session?.user?.id,
+                    business_id: userDetails.id
+                  }
+                ]);
+
+                if (businessInsertError) {
+                  console.log("Member Insert Error:", memberInsertError);
+                }   
+                
+                setUserRole('owner');
 
                 Alert.alert('Regitration Success', 'Redirecting');
             
