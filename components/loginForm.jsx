@@ -32,9 +32,9 @@ const LoginForm = ({ email, setEmail, password, setPassword, rememberPassword, s
     useEffect(() => {
         if (userRole) {
             if (userRole === "owner") {
-                router.push('/main/dashboard');
+                router.push('/main/profile/apiTest');
             } else {
-                router.push('/main/sales');
+                router.push('/main/profile/apiTest');
             }
         }
     }, [userRole]); 

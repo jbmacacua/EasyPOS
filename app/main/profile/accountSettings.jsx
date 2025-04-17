@@ -89,9 +89,12 @@ export default function AccountSettings() {
 
         if (!result.canceled) {
             const selected = result.assets[0];
+            const extension = selected.uri.split('.').pop(); 
+            const fileType = selected.type === 'image' ? `image/${extension}` : selected.type;
+
             setImage({
                 uri: selected.uri,
-                type: selected.type || "image/jpeg",
+                type: fileType
             });
         }
     };

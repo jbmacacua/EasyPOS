@@ -66,7 +66,11 @@ export async function uploadProfileImage(
       throw new Error("User is not logged in");
     }
 
-    const filePath = `public/${userId}/profile.jpg`;
+    const extension = file.type.split('/')[1];
+
+    if (!extension) throw new Error ("file.type needs to be in a format of image/{extension} example image/png")
+
+    const filePath = `public/${userId}/profile.${extension}`;
 
     // Decode base64 string into ArrayBuffer
     const arrayBuffer = decode(file.base64);

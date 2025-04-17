@@ -55,6 +55,7 @@ export async function getProducts(
   }
 }
 
+// Get Specific Product Data with productId
 export async function getProductById(
   userId: string,
   productId: string,
@@ -82,6 +83,7 @@ export async function getProductById(
 }
 
 // Product conflict checking
+// Check if product already exist --  Use this first before adding new product
 export async function checkExistingProduct(
   userId: string,
   barCode: string,
@@ -110,6 +112,7 @@ export async function checkExistingProduct(
   }
 }
 
+// Check if the productr is available -- Use during sale, check each time a bar code is scanned.
 export async function checkProductAvailability(
   userId: string,
   barCode: string,
@@ -140,11 +143,11 @@ export async function checkProductAvailability(
 }
 
 // Product Management
+// Product Image
 export async function uploadProductImage(
   file: { base64: string; type: string },
   userId: string,
   businessId: string,
-  productName: string,
   productId: string
 ) {
   try {
@@ -152,7 +155,21 @@ export async function uploadProductImage(
       throw new Error("User is not logged in");
     }
 
-    const filePath = `public/${businessId}/${productName}.jpg`;
+    const { data: productDetails, error: productDetailsError } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", productId)
+        .single();
+
+    if (productDetailsError) {
+        throw productDetailsError
+    }
+
+    const extension = file.type.split('/')[1];
+
+    if (!extension) throw new Error ("file.type needs to be in a format of image/{extension} example image/png")
+
+    const filePath = `public/${businessId}/${productDetails.name}.${extension}`;
 
     // Decode base64 string into ArrayBuffer
     const arrayBuffer = decode(file.base64);
@@ -175,13 +192,12 @@ export async function uploadProductImage(
 
     const imageUrl = data?.publicUrl;
 
-    console.log(data)
     if (!imageUrl) throw new Error("Could not generate public image URL.");
 
     // Update user's profile image in the database
     const { error: updateError } = await supabase
       .from("products")
-      .update({ image: imageUrl })
+      .update({ image_file: imageUrl })
       .eq("id", productId);
 
     if (updateError) throw updateError;
@@ -210,23 +226,29 @@ export async function addProduct(
       throw new Error("User is not logged in");
     }
 
-    const { data: userDetails, error: userDetailsError } = await supabase
-      .from("user_details")
-      .select(
-        `
-          role,
-          business_members (
-            user_id,
-            business_id
-          )
-        `
-      )
+    const { data: businessMembership, error: businessMembershipError } = await supabase
+      .from("business_members")
+      .select('business_id')
       .eq("user_id", userId)
-      .or(`role.eq.owner, role.eq.inventory`)
-      .filter("business_members.business_id", "eq", businessId)
+      .eq("business_id", businessId)
       .single();
 
-    if (!userDetails || !userDetails.business_members || userDetails.business_members.length === 0) {
+    if (!businessMembership) {
+      throw new Error("Unauthorized Access");
+    }
+
+    if (businessMembershipError) {
+      throw businessMembershipError
+    }
+
+    const { data: userDetails, error: userDetailsError } = await supabase
+      .from("user_details")
+      .select('role')
+      .eq("user_id", userId)
+      .or(`role.eq.owner, role.eq.inventory`)
+      .single();
+
+    if (!userDetails) {
       throw new Error("Only owners or inventory can insert");
     }
 
@@ -236,24 +258,30 @@ export async function addProduct(
 
     const { data, error } = await supabase
       .from("products")
-      .select("*")  
-      .or(`bar_code.eq.${barCode}, name.eq.${name}`)
+      .select("*")
+      .or(`bar_code.eq.${barCode},name.eq.${name}`)
       .eq("business_id", businessId)
-      .single();
+    
 
     if (error) {
       throw error;
     }
 
-    if(data) throw new Error ("Product code or name already exist")
+    if(data.length>0) throw new Error ("Product code or name already exist")
 
-    const { error: insertError } = await supabase
-      .from('products')
-      .insert([
-        { name, bar_code: barCode, price, quantity, total_quantity_since_restock :totalQuanitySinceRestock, business_id: businessId},
-      ])
-      .select()
-    
+    const { error: insertError } = await supabase.from('products').insert([
+        {
+        business_id: businessId,
+        name: name,
+        bar_code: barCode,
+        price: price,
+        quantity: quantity,
+        total_quantity_since_restock: totalQuanitySinceRestock,
+        }
+    ]);
+
+    console.log(insertError)
+        
     if (insertError) {
       throw insertError;
     }
@@ -276,6 +304,8 @@ export async function addProduct(
   }
 }
 
+// Change Product Details
+// Requires all the fields here to be not empty
 export async function editProduct(
   userId: string,
   productId: string,
@@ -290,25 +320,34 @@ export async function editProduct(
       throw new Error("User is not logged in");
     }
 
-    // Check if the user is an owner in the business
-    const { data: userDetails, error: userDetailsError } = await supabase
-      .from("user_details")
-      .select(
-        `
-          role,
-          business_members (
-            user_id,
-            business_id
-          )
-        `
-      )
+    const { data: businessMembership, error: businessMembershipError } = await supabase
+      .from("business_members")
+      .select('business_id')
       .eq("user_id", userId)
-      .or(`role.eq.owner, role.eq.inventory`)
-      .filter("business_members.business_id", "eq", businessId)
+      .eq("business_id", businessId)
       .single();
 
-    if (!userDetails || !userDetails.business_members || userDetails.business_members.length === 0) {
-      throw new Error("Only owners or inventory can edit products");
+    if (!businessMembership) {
+      throw new Error("Unauthorized Access");
+    }
+
+    if (businessMembershipError) {
+      throw businessMembershipError
+    }
+
+    const { data: userDetails, error: userDetailsError } = await supabase
+      .from("user_details")
+      .select('role')
+      .eq("user_id", userId)
+      .or(`role.eq.owner, role.eq.inventory`)
+      .single();
+
+    if (!userDetails) {
+      throw new Error("Only owners or inventory can insert");
+    }
+
+    if (userDetailsError) {
+      throw userDetailsError
     }
 
     // Check if another product with the same barCode or name already exists in the business
@@ -359,26 +398,34 @@ export async function deleteProduct(
       throw new Error("User is not logged in");
     }
 
-    const { data: userDetails, error: userDetailsError } = await supabase
-      .from("user_details")
-      .select(`
-        role,
-        business_members (
-          user_id,
-          business_id
-        )
-      `)
+    const { data: businessMembership, error: businessMembershipError } = await supabase
+      .from("business_members")
+      .select('business_id')
       .eq("user_id", userId)
-      .or(`role.eq.owner, role.eq.inventory`)
-      .filter("business_members.business_id", "eq", businessId)
+      .eq("business_id", businessId)
       .single();
 
-    if (userDetailsError) {
-      throw userDetailsError;
+    if (!businessMembership) {
+      throw new Error("Unauthorized Access");
     }
 
-    if (!userDetails || !userDetails.business_members || userDetails.business_members.length === 0) {
-      throw new Error("Only owners or inventory can delete products");
+    if (businessMembershipError) {
+      throw businessMembershipError
+    }
+
+    const { data: userDetails, error: userDetailsError } = await supabase
+      .from("user_details")
+      .select('role')
+      .eq("user_id", userId)
+      .or(`role.eq.owner, role.eq.inventory`)
+      .single();
+
+    if (!userDetails) {
+      throw new Error("Only owners or inventory can insert");
+    }
+
+    if (userDetailsError) {
+      throw userDetailsError
     }
 
     // Check if the product exists in the specified business
@@ -387,13 +434,12 @@ export async function deleteProduct(
       .select("*")
       .eq("id", productId)
       .eq("business_id", businessId)
-      .single();
 
     if (productError) {
       throw productError;
     }
 
-    if (!product) {
+    if (product.length == 0 ) {
       throw new Error("Product not found");
     }
 
