@@ -1,15 +1,14 @@
-import { View, Text, Button } from 'react-native';
+import { View, Text, Button, TextInput } from 'react-native';
 import { useMemo, useState } from 'react';
 import { useSession } from '@context/auth';
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
-import { uploadProductImage } from '../../../api/inventory'; // Import the uploadProductImage API
+import { getTotalSalesForMonth, getProfitForMonth, getMostSoldItemsForMonth } from '../../../api/sales'; // Import the APIs
 
 export default function ApiTestScreen() {
   const { session, businessId } = useSession();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');
-  const [image, setImage] = useState(null);
+  const [weekNumber, setWeekNumber] = useState(1); // Default to week 1
+  const [date, setDate] = useState('2025-04-18'); // Set a default date or allow user input
 
   const parsedSession = useMemo(() => {
     try {
@@ -22,34 +21,10 @@ export default function ApiTestScreen() {
 
   const userId = parsedSession?.user?.id;
 
-  const handleImagePick = async () => {
-    // Ask for permission to access the device's photo library
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Permission to access camera roll is required!');
-      return;
-    }
-
-    // Open image picker to select an image
-    const pickedImage = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
-    });
-
-    if (!pickedImage.cancelled) {
-      const selected = pickedImage.assets[0];
-      const extension = selected.uri.split('.').pop(); // Get the extension from the URI
-      const fileType = selected.type === 'image' ? `image/${extension}` : selected.type;
-      setImage({
-        uri: selected.uri,
-        type: fileType
-    });
-    }
-  };
-
-  const handleUploadImage = async () => {
-    if (!image) {
-      alert('Please select an image first');
+  // Function to fetch total sales for the week
+  const handleGetTotalSalesForWeek = async () => {
+    if (!userId || !businessId) {
+      setResult('❌ User or Business ID is missing!');
       return;
     }
 
@@ -57,26 +32,62 @@ export default function ApiTestScreen() {
     setResult('');
 
     try {
-      // Read the selected image as base64
-
-      console.log(image.uri)
-      const base64 = await FileSystem.readAsStringAsync(image.uri, { encoding: 'base64' });
-
-      const file = {
-        type: image.type,
-        base64,
-      };
-
-      const hardcodedProductId = '6f1d7c4c-db8f-44f5-b157-a131dc30d38f'; // Replace with actual product ID
-      const hardcodedProductName = 'Sample Product'; // Replace with actual product name
-
-      // Upload the image
-      const res = await uploadProductImage(file, userId, businessId, hardcodedProductId);
+      const res = await getTotalSalesForMonth(userId, businessId);
 
       if (res.success) {
-        setResult(`✅ Image successfully uploaded: ${res.url}`);
+        setResult(`✅ Total sales for Week ${weekNumber}: ₱${res.totalSales}`);
       } else {
-        setResult(`❌ Upload failed: ${res.error}`);
+        setResult(`❌ Failed to fetch total sales: ${res.error.message}`);
+      }
+    } catch (error) {
+      setResult(`❌ Error: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to fetch profit for the week
+  const handleGetProfitForWeek = async () => {
+    if (!userId || !businessId) {
+      setResult('❌ User or Business ID is missing!');
+      return;
+    }
+
+    setLoading(true);
+    setResult('');
+
+    try {
+      const res = await getProfitForMonth(userId, businessId);
+
+      if (res.success) {
+        setResult(`✅ Profit for Week ${weekNumber}: ₱${res.profit}`);
+      } else {
+        setResult(`❌ Failed to fetch profit: ${res.error.message}`);
+      }
+    } catch (error) {
+      setResult(`❌ Error: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to fetch most sold items for the week
+  const handleGetMostSoldItemsForWeek = async () => {
+    if (!userId || !businessId) {
+      setResult('❌ User or Business ID is missing!');
+      return;
+    }
+
+    setLoading(true);
+    setResult('');
+
+    try {
+      const res = await getMostSoldItemsForMonth(userId, businessId);
+
+      if (res.success) {
+        setResult(`✅ Most sold items for Week ${weekNumber}: ${JSON.stringify(res.data, null, 2)}`);
+      } else {
+        setResult(`❌ Failed to fetch most sold items: ${res.error.message}`);
       }
     } catch (error) {
       setResult(`❌ Error: ${error.message}`);
@@ -87,16 +98,36 @@ export default function ApiTestScreen() {
 
   return (
     <View className="flex-1 justify-center items-center bg-white px-4">
-      <Text className="text-2xl font-bold mb-6 text-center">📸 Upload Product Image Test</Text>
+      <Text className="text-2xl font-bold mb-6 text-center">💰 API Test for Week</Text>
 
-      {/* Button to select an image from the device */}
-      <Button title="Select Image" onPress={handleImagePick} />
+      {/* Input for Week Number */}
+      <TextInput
+        value={String(weekNumber)}
+        onChangeText={setWeekNumber}
+        keyboardType="numeric"
+        placeholder="Enter Week Number (1-4)"
+        className="mb-4 p-2 border border-gray-300 rounded"
+      />
 
-      {/* Button to upload the selected image */}
+      {/* Button to trigger Get Total Sales for Week */}
       <Button
-        title={loading ? 'Uploading...' : 'Upload Image'}
-        onPress={handleUploadImage}
-        disabled={loading || !image}
+        title={loading ? 'Fetching Total Sales...' : `Get Total Sales for Week ${weekNumber}`}
+        onPress={handleGetTotalSalesForWeek}
+        disabled={loading}
+      />
+
+      {/* Button to trigger Get Profit for Week */}
+      <Button
+        title={loading ? 'Fetching Profit...' : `Get Profit for Week ${weekNumber}`}
+        onPress={handleGetProfitForWeek}
+        disabled={loading}
+      />
+
+      {/* Button to trigger Get Most Sold Items for Week */}
+      <Button
+        title={loading ? 'Fetching Most Sold Items...' : `Get Most Sold Items for Week ${weekNumber}`}
+        onPress={handleGetMostSoldItemsForWeek}
+        disabled={loading}
       />
 
       {/* Display the result */}

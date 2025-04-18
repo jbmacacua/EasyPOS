@@ -218,6 +218,7 @@ export async function addProduct(
   businessId: string,
   name: string,
   price: Number,
+  basePrice: Number,
   quantity: Number,
   totalQuanitySinceRestock: Number,
 ) {
@@ -276,6 +277,7 @@ export async function addProduct(
         bar_code: barCode,
         price: price,
         quantity: quantity,
+        base_price: basePrice,
         total_quantity_since_restock: totalQuanitySinceRestock,
         }
     ]);
