@@ -1,14 +1,16 @@
-import { View, Text, Button, TextInput } from 'react-native';
+import { View, Text, TextInput, Button, ScrollView } from 'react-native';
 import { useMemo, useState } from 'react';
 import { useSession } from '@context/auth';
-import { getTotalSalesForMonth, getProfitForMonth, getMostSoldItemsForMonth } from '../../../api/sales'; // Import the APIs
+import { editBusinessInformation, getBusinessDetails } from '../../../api/business';
 
 export default function ApiTestScreen() {
   const { session, businessId } = useSession();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');
-  const [weekNumber, setWeekNumber] = useState(1); // Default to week 1
-  const [date, setDate] = useState('2025-04-18'); // Set a default date or allow user input
+  const [storeName, setStoreName] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [emailAddress, setEmailAddress] = useState('');
+  const [address, setAddress] = useState('');
 
   const parsedSession = useMemo(() => {
     try {
@@ -21,8 +23,7 @@ export default function ApiTestScreen() {
 
   const userId = parsedSession?.user?.id;
 
-  // Function to fetch total sales for the week
-  const handleGetTotalSalesForWeek = async () => {
+  const handleGetBusinessDetails = async () => {
     if (!userId || !businessId) {
       setResult('❌ User or Business ID is missing!');
       return;
@@ -30,110 +31,105 @@ export default function ApiTestScreen() {
 
     setLoading(true);
     setResult('');
-
     try {
-      const res = await getTotalSalesForMonth(userId, businessId);
-
+      const res = await getBusinessDetails(userId, businessId);
       if (res.success) {
-        setResult(`✅ Total sales for Week ${weekNumber}: ₱${res.totalSales}`);
+        const { store_name, contact_number, email_address, address } = res.businessDetails;
+        setStoreName(store_name);
+        setContactNumber(contact_number);
+        setEmailAddress(email_address);
+        setAddress(address);
+        setResult('✅ Business details loaded successfully!');
       } else {
-        setResult(`❌ Failed to fetch total sales: ${res.error.message}`);
+        setResult(`❌ Failed to fetch details: ${res.error.message}`);
       }
-    } catch (error) {
-      setResult(`❌ Error: ${error.message}`);
+    } catch (err) {
+      setResult(`❌ Error: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  // Function to fetch profit for the week
-  const handleGetProfitForWeek = async () => {
+  const handleEditBusinessInfo = async () => {
     if (!userId || !businessId) {
       setResult('❌ User or Business ID is missing!');
       return;
     }
 
-    setLoading(true);
-    setResult('');
-
-    try {
-      const res = await getProfitForMonth(userId, businessId);
-
-      if (res.success) {
-        setResult(`✅ Profit for Week ${weekNumber}: ₱${res.profit}`);
-      } else {
-        setResult(`❌ Failed to fetch profit: ${res.error.message}`);
-      }
-    } catch (error) {
-      setResult(`❌ Error: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Function to fetch most sold items for the week
-  const handleGetMostSoldItemsForWeek = async () => {
-    if (!userId || !businessId) {
-      setResult('❌ User or Business ID is missing!');
+    if (!storeName || !contactNumber || !emailAddress || !address) {
+      setResult('❌ All fields must be filled out!');
       return;
     }
 
     setLoading(true);
     setResult('');
-
     try {
-      const res = await getMostSoldItemsForMonth(userId, businessId);
+      const res = await editBusinessInformation(
+        storeName,
+        contactNumber,
+        emailAddress,
+        address,
+        userId,
+        businessId
+      );
 
       if (res.success) {
-        setResult(`✅ Most sold items for Week ${weekNumber}: ${JSON.stringify(res.data, null, 2)}`);
+        setResult('✅ Business info updated successfully!');
       } else {
-        setResult(`❌ Failed to fetch most sold items: ${res.error.message}`);
+        setResult(`❌ Update failed: ${res.error.message}`);
       }
-    } catch (error) {
-      setResult(`❌ Error: ${error.message}`);
+    } catch (err) {
+      setResult(`❌ Error: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View className="flex-1 justify-center items-center bg-white px-4">
-      <Text className="text-2xl font-bold mb-6 text-center">💰 API Test for Week</Text>
+    <ScrollView className="flex-1 bg-white px-4 pt-6">
+      <Text className="text-2xl font-bold mb-4 text-center">🏪 Business API Test</Text>
 
-      {/* Input for Week Number */}
       <TextInput
-        value={String(weekNumber)}
-        onChangeText={setWeekNumber}
-        keyboardType="numeric"
-        placeholder="Enter Week Number (1-4)"
-        className="mb-4 p-2 border border-gray-300 rounded"
+        value={storeName}
+        onChangeText={setStoreName}
+        placeholder="Store Name"
+        className="mt-2 p-2 border border-gray-300 rounded"
+      />
+      <TextInput
+        value={contactNumber}
+        onChangeText={setContactNumber}
+        placeholder="Contact Number"
+        keyboardType="phone-pad"
+        className="mt-2 p-2 border border-gray-300 rounded"
+      />
+      <TextInput
+        value={emailAddress}
+        onChangeText={setEmailAddress}
+        placeholder="Email Address"
+        keyboardType="email-address"
+        className="mt-2 p-2 border border-gray-300 rounded"
+      />
+      <TextInput
+        value={address}
+        onChangeText={setAddress}
+        placeholder="Address"
+        className="mt-2 p-2 border border-gray-300 rounded"
       />
 
-      {/* Button to trigger Get Total Sales for Week */}
       <Button
-        title={loading ? 'Fetching Total Sales...' : `Get Total Sales for Week ${weekNumber}`}
-        onPress={handleGetTotalSalesForWeek}
+        title={loading ? 'Loading...' : '📥 Fetch Business Info'}
+        onPress={handleGetBusinessDetails}
+        disabled={loading}
+      />
+      <Button
+        title={loading ? 'Saving...' : '💾 Save Business Info'}
+        onPress={handleEditBusinessInfo}
         disabled={loading}
       />
 
-      {/* Button to trigger Get Profit for Week */}
-      <Button
-        title={loading ? 'Fetching Profit...' : `Get Profit for Week ${weekNumber}`}
-        onPress={handleGetProfitForWeek}
-        disabled={loading}
-      />
-
-      {/* Button to trigger Get Most Sold Items for Week */}
-      <Button
-        title={loading ? 'Fetching Most Sold Items...' : `Get Most Sold Items for Week ${weekNumber}`}
-        onPress={handleGetMostSoldItemsForWeek}
-        disabled={loading}
-      />
-
-      {/* Display the result */}
       {result !== '' && (
         <Text className="mt-6 text-lg text-center text-gray-800">{result}</Text>
       )}
-    </View>
+    </ScrollView>
   );
 }
