@@ -67,6 +67,9 @@ export function SessionProvider({ children }: PropsWithChildren) {
                 
               if (userDetailsError || !userDetails) {
                 Alert.alert('Login Failed', 'User record does not exist.');
+                let { error } = await supabase.auth.signOut()
+                if(error) throw error
+                
                 return false;
               }
 
@@ -132,6 +135,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
                     last_name: lastName,
                     contact_number: contactNumber,
                     address: address,
+                    email: email,
                     role:'owner'
                     }
                 ]);

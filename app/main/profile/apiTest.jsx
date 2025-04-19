@@ -1,16 +1,15 @@
-import { View, Text, TextInput, Button, ScrollView } from 'react-native';
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { View, Text, Button, ScrollView } from 'react-native';
 import { useSession } from '@context/auth';
-import { editBusinessInformation, getBusinessDetails } from '../../../api/business';
+import { deleteEmployee, getAllEmployees } from '../../../api/accounts';
 
-export default function ApiTestScreen() {
+export default function ChangeEmployeeRoleScreen() {
   const { session, businessId } = useSession();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');
-  const [storeName, setStoreName] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
-  const [emailAddress, setEmailAddress] = useState('');
-  const [address, setAddress] = useState('');
+
+  // Hardcoded employee ID for testing (replace with actual Supabase user_id)
+  const hardcodedEmployeeId = '2ec54bf7-37ca-4df6-b25c-bf9775cf87a5';
 
   const parsedSession = useMemo(() => {
     try {
@@ -23,25 +22,22 @@ export default function ApiTestScreen() {
 
   const userId = parsedSession?.user?.id;
 
-  const handleGetBusinessDetails = async () => {
+  const handleDeleteEmployee = async () => {
     if (!userId || !businessId) {
-      setResult('❌ User or Business ID is missing!');
+      setResult('❌ User or Business ID is missing');
       return;
     }
 
     setLoading(true);
     setResult('');
+
     try {
-      const res = await getBusinessDetails(userId, businessId);
+      const res = await deleteEmployee(userId, hardcodedEmployeeId, businessId);
+
       if (res.success) {
-        const { store_name, contact_number, email_address, address } = res.businessDetails;
-        setStoreName(store_name);
-        setContactNumber(contact_number);
-        setEmailAddress(email_address);
-        setAddress(address);
-        setResult('✅ Business details loaded successfully!');
+        setResult('✅ Employee deleted successfully!');
       } else {
-        setResult(`❌ Failed to fetch details: ${res.error.message}`);
+        setResult(`❌ Failed: ${res.error.message || res.error}`);
       }
     } catch (err) {
       setResult(`❌ Error: ${err.message}`);
@@ -50,33 +46,28 @@ export default function ApiTestScreen() {
     }
   };
 
-  const handleEditBusinessInfo = async () => {
+  const handleGetAllEmployees = async () => {
     if (!userId || !businessId) {
-      setResult('❌ User or Business ID is missing!');
-      return;
-    }
-
-    if (!storeName || !contactNumber || !emailAddress || !address) {
-      setResult('❌ All fields must be filled out!');
+      setResult('❌ User or Business ID is missing');
       return;
     }
 
     setLoading(true);
     setResult('');
+
+    const page = 1
+    const limit = 10
+
     try {
-      const res = await editBusinessInformation(
-        storeName,
-        contactNumber,
-        emailAddress,
-        address,
-        userId,
-        businessId
-      );
+      const res = await getAllEmployees(userId, businessId, page, limit);
 
       if (res.success) {
-        setResult('✅ Business info updated successfully!');
+        const employeeDetails = res.result
+          .map((item, idx) => `#${idx + 1}: ${item.firstName} ${item.lastName} (Role: ${item.role})`)
+          .join('\n');
+        setResult(`✅ Employees:\n${employeeDetails}`);
       } else {
-        setResult(`❌ Update failed: ${res.error.message}`);
+        setResult(`❌ Failed: ${res.error.message || res.error}`);
       }
     } catch (err) {
       setResult(`❌ Error: ${err.message}`);
@@ -86,49 +77,35 @@ export default function ApiTestScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-white px-4 pt-6">
-      <Text className="text-2xl font-bold mb-4 text-center">🏪 Business API Test</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: '#fff', paddingHorizontal: 16, paddingTop: 24 }}>
+      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' }}>
+        👥 Employee Actions Tester
+      </Text>
 
-      <TextInput
-        value={storeName}
-        onChangeText={setStoreName}
-        placeholder="Store Name"
-        className="mt-2 p-2 border border-gray-300 rounded"
-      />
-      <TextInput
-        value={contactNumber}
-        onChangeText={setContactNumber}
-        placeholder="Contact Number"
-        keyboardType="phone-pad"
-        className="mt-2 p-2 border border-gray-300 rounded"
-      />
-      <TextInput
-        value={emailAddress}
-        onChangeText={setEmailAddress}
-        placeholder="Email Address"
-        keyboardType="email-address"
-        className="mt-2 p-2 border border-gray-300 rounded"
-      />
-      <TextInput
-        value={address}
-        onChangeText={setAddress}
-        placeholder="Address"
-        className="mt-2 p-2 border border-gray-300 rounded"
-      />
+      <Text style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>
+        🔒 Hardcoded Employee ID: {hardcodedEmployeeId}
+      </Text>
 
-      <Button
-        title={loading ? 'Loading...' : '📥 Fetch Business Info'}
-        onPress={handleGetBusinessDetails}
-        disabled={loading}
-      />
-      <Button
-        title={loading ? 'Saving...' : '💾 Save Business Info'}
-        onPress={handleEditBusinessInfo}
-        disabled={loading}
-      />
+      <View style={{ marginBottom: 12 }}>
+        <Button
+          title={loading ? 'Deleting...' : '🗑️ Delete Employee'}
+          onPress={handleDeleteEmployee}
+          disabled={loading}
+        />
+      </View>
+
+      <View style={{ marginBottom: 12 }}>
+        <Button
+          title={loading ? 'Fetching...' : '👁️ View All Employees'}
+          onPress={handleGetAllEmployees}
+          disabled={loading}
+        />
+      </View>
 
       {result !== '' && (
-        <Text className="mt-6 text-lg text-center text-gray-800">{result}</Text>
+        <Text style={{ marginTop: 24, fontSize: 16, textAlign: 'center', color: '#333', whiteSpace: 'pre-line' }}>
+          {result}
+        </Text>
       )}
     </ScrollView>
   );
