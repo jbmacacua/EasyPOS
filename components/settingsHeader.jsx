@@ -29,18 +29,18 @@ export default function SettingsHeader({ editButton, backButton }) {
           EasyPOS
         </Text>
 
-        {/* Edit/Add Button (Based on selected section) */}
-        {editButton === "edit" && (
-          <TouchableOpacity onPress={() => { /* handle edit action */ }}>
-            <Feather name="edit-3" size={30} color="white" />
+        {/* Edit or Add Button */}
+        {editButton ? (
+          <TouchableOpacity onPress={editButton.onPress}>
+            <Feather
+              name={editButton.type === "add" ? "plus-circle" : "edit-3"}
+              size={30}
+              color="white"
+            />
           </TouchableOpacity>
+        ) : (
+          <View style={{ width: 34 }} /> // Placeholder for spacing if no edit/add button
         )}
-        {editButton === "add" && (
-          <TouchableOpacity onPress={() => { /* handle add action */ }}>
-            <Feather name="plus-circle" size={30} color="white" />
-          </TouchableOpacity>
-        )}
-        {editButton === "none" && <View style={{ width: 34 }} />}
       </View>
     </View>
   );

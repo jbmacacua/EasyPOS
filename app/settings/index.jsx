@@ -13,6 +13,7 @@ import AboutUs from "@components/aboutUs";
 
 export default function Settings() {
   const [selectedSection, setSelectedSection] = useState(null);
+  const [editMode, setEditMode] = useState(false);
   const navigation = useNavigation();
 
   const { session, userRole } = useSession();
@@ -35,6 +36,10 @@ export default function Settings() {
   }, [parsedSession, userRole]);
 
   const handleBack = () => {
+    if (editMode) {
+      setEditMode(false);
+    }
+
     if (userRole === "sales") {
       navigation.goBack();
     } else {
@@ -46,18 +51,24 @@ export default function Settings() {
     }
   };
 
-  const editButton =
-    selectedSection === "employees"
-      ? "add"
-      : selectedSection === "about"
-      ? "none"
-      : selectedSection
-      ? "edit"
-      : null;
+  const handleEditPress = () => {
+    setEditMode((prev) => !prev);
+  };
+
+  const getEditButton = () => {
+    if (selectedSection === "employees") {
+      return { type: "add", onPress: () => {} }; // replace with actual add logic if needed
+    } else if (selectedSection === "business") {
+      return { type: "edit", onPress: handleEditPress };
+    } else if (selectedSection === "about") {
+      return null;
+    }
+    return null;
+  };
 
   return (
     <View className="bg-[#3F89C1] flex-1">
-      <SettingsHeader editButton={editButton} backButton={handleBack} />
+      <SettingsHeader editButton={getEditButton()} backButton={handleBack} />
 
       <View className="bg-white rounded-t-[65px] flex-1">
         <Text className="text-[#3C80B4] text-[20px] font-bold text-center py-5">
@@ -72,8 +83,9 @@ export default function Settings() {
             : "Settings"}
         </Text>
 
-        {/* Render the selected section or show the settings list */}
-        {selectedSection === "business" && <BusinessInformation />}
+        {selectedSection === "business" && (
+          <BusinessInformation editMode={editMode} />
+        )}
         {selectedSection === "employees" && <EmployeesAccount />}
         {selectedSection === "about" && <AboutUs />}
 
@@ -81,25 +93,40 @@ export default function Settings() {
           <ScrollView contentContainerStyle={{ padding: 8 }}>
             <TouchableOpacity
               className="bg-white p-3 mb-4 border-b border-[#3C80B4] rounded-lg flex-row items-center justify-between"
-              onPress={() => setSelectedSection("business")}
+              onPress={() => {
+                setSelectedSection("business");
+                setEditMode(false);
+              }}
             >
-              <Text className="text-black text-[18px] font-semibold">Business Information</Text>
+              <Text className="text-black text-[18px] font-semibold">
+                Business Information
+              </Text>
               <Feather name="chevron-right" size={24} color="#3C80B4" />
             </TouchableOpacity>
 
             <TouchableOpacity
               className="bg-white p-3 mb-4 border-b border-[#3C80B4] rounded-lg flex-row items-center justify-between"
-              onPress={() => setSelectedSection("employees")}
+              onPress={() => {
+                setSelectedSection("employees");
+                setEditMode(false);
+              }}
             >
-              <Text className="text-black text-[18px] font-semibold">Employees Account</Text>
+              <Text className="text-black text-[18px] font-semibold">
+                Employees Account
+              </Text>
               <Feather name="chevron-right" size={24} color="#3C80B4" />
             </TouchableOpacity>
 
             <TouchableOpacity
               className="bg-white p-3 mb-4 border-b border-[#3C80B4] rounded-lg flex-row items-center justify-between"
-              onPress={() => setSelectedSection("about")}
+              onPress={() => {
+                setSelectedSection("about");
+                setEditMode(false);
+              }}
             >
-              <Text className="text-black text-[18px] font-semibold">About Us</Text>
+              <Text className="text-black text-[18px] font-semibold">
+                About Us
+              </Text>
               <Feather name="chevron-right" size={24} color="#3C80B4" />
             </TouchableOpacity>
           </ScrollView>
