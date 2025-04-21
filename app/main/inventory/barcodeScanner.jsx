@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, Modal, TouchableOpacity, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Modal, TouchableOpacity, Pressable, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CameraView, Camera } from "expo-camera";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { checkExistingProduct } from "@api/inventory";
 
-const BarcodeScanner = () => {
+
+const BarcodeScanner = ({ userId, businessId }) => {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [scannerVisible, setScannerVisible] = useState(false);
@@ -21,31 +22,12 @@ const BarcodeScanner = () => {
     getCameraPermissions();
   }, []);
 
-  const saveScannedBarcode = async (barcode) => {
-    try {
-      const storedBarcodes = await AsyncStorage.getItem("scannedBarcodes");
-      let barcodes = storedBarcodes ? JSON.parse(storedBarcodes) : [];
-
-      // Avoid duplicates
-      if (!barcodes.some((item) => item.barcode === barcode)) {
-        const newBarcode = { barcode, scannedAt: new Date().toLocaleString() };
-        barcodes.push(newBarcode);
-
-        await AsyncStorage.setItem("scannedBarcodes", JSON.stringify(barcodes));
-        console.log(" Barcode saved:", newBarcode); // Debug log
-      }
-    } catch (error) {
-      console.error("Error saving barcode:", error);
-    }
-  };
-
-
-
-  const handleBarcodeScanned = ({ type, data }) => {
+  const handleBarcodeScanned = async ({ type, data }) => {
     setScanned(true);
-    setBarcodeData({ type, data });
     setScannerVisible(false);
-    saveScannedBarcode(data);
+    const scanned = { type, data };
+    setBarcodeData(scanned);
+    await checkInventory(scanned.data);
   };
 
   const openScanner = () => {
@@ -53,52 +35,92 @@ const BarcodeScanner = () => {
     setScannerVisible(true);
   };
 
+  const checkInventory = async (barCode) => {
+    if (!barCode || !userId || !businessId) return;
 
-  const checkInventory = async () => {
-    if (!barcodeData || !barcodeData.data) return;
+    console.log("Checking barcode:", barCode);
+    console.log("Checking businessId:", businessId);
 
     setChecking(true);
-
     try {
-      const storedProducts = await AsyncStorage.getItem("products");
-      const products = storedProducts ? JSON.parse(storedProducts) : [];
+      const { success, barcodeAvailable, error } = await checkExistingProduct(
+        userId,
+        barCode,
+        businessId
+      );
 
-      console.log("Products:", products);  // Debug log for checking products
-      console.log("Scanned Barcode:", barcodeData.data);  // Debug log for checking barcode data
+      setChecking(false);
 
-      const existingProduct = products.find((product) => String(product.barcode) === String(barcodeData.data));
+      if (!success) {
+        console.error("Check failed:", error);
+        return;
+      }
 
-      // Delay the state update to simulate checking
-      setTimeout(() => {
-        setChecking(false);
-        setBarcodeData((prev) => ({
-          ...prev,
-          status: existingProduct ? "Exists in Inventory" : "Nonexistent in Inventory", // Set the status explicitly
-        }));
-
-        saveScannedBarcode(barcodeData.data);
-      }, 1000);
-    } catch (error) {
-      console.error("Error checking inventory:", error);
+      setBarcodeData((prev) => ({
+        ...prev,
+        status: barcodeAvailable ? "Nonexistent in Inventory" : "Exists in Inventory",
+      }));
+    } catch (err) {
+      console.error("Unexpected error:", err);
       setChecking(false);
     }
   };
 
-
-
   if (hasPermission === null) {
-    return <Text style={{ textAlign: "center", fontSize: 18, color: "#666" }}>Requesting for camera permission</Text>;
+    return (
+      <Text style={{ textAlign: "center", fontSize: 18, color: "#666" }}>
+        Requesting for camera permission
+      </Text>
+    );
   }
   if (hasPermission === false) {
-    return <Text style={{ textAlign: "center", fontSize: 18, color: "#f00" }}>No access to camera</Text>;
+    return (
+      <Text style={{ textAlign: "center", fontSize: 18, color: "#f00" }}>
+        No access to camera
+      </Text>
+    );
   }
 
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Modal animationType="slide" transparent={false} visible={scannerVisible} onRequestClose={() => setScannerVisible(false)}>
-        <View style={{ flex: 1, backgroundColor: "black", justifyContent: "center", alignItems: "center" }}>
-          <CameraView onBarcodeScanned={scanned ? undefined : handleBarcodeScanned} barcodeScannerSettings={{ barcodeTypes: ["qr", "ean13", "upc_a"] }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
-          <TouchableOpacity style={{ position: "absolute", top: 10, right: 20, backgroundColor: "#333", padding: 10, borderRadius: 50 }} onPress={() => setScannerVisible(false)}>
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={scannerVisible}
+        onRequestClose={() => setScannerVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "black",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <CameraView
+            onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
+            barcodeScannerSettings={{
+              barcodeTypes: ["qr", "ean13", "upc_a"],
+            }}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+          />
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              top: 10,
+              right: 20,
+              backgroundColor: "#333",
+              padding: 10,
+              borderRadius: 50,
+            }}
+            onPress={() => setScannerVisible(false)}
+          >
             <Ionicons name="close" size={32} color="white" />
           </TouchableOpacity>
         </View>
@@ -107,7 +129,9 @@ const BarcodeScanner = () => {
       {barcodeData && (
         <View className="absolute bottom-24 mx-5 w-[80%] bg-white rounded-3xl shadow-lg mb-40">
           <View className="bg-[#3C80B4] rounded-t-3xl p-5">
-            <Text className="text-center text-lg font-semibold text-white">Scanned Barcode</Text>
+            <Text className="text-center text-lg font-semibold text-white">
+              Scanned Barcode
+            </Text>
           </View>
           <View className="mt-4 ml-6">
             <Text className="text-gray-600 text-base">
@@ -126,31 +150,52 @@ const BarcodeScanner = () => {
                 barcodeData.status || "Nonexistent in Inventory"
               )}
             </Text>
-
-
           </View>
           <View className="flex-row justify-between p-6">
-            <Pressable className="flex-1 bg-[#3C80B4] py-2 rounded-3xl mr-2" onPress={() => setBarcodeData(null)}>
-              <Text className="text-white text-center font-semibold">Cancel</Text>
-            </Pressable>
-            {!checking && (
-              <Pressable
-                className="flex-1 bg-[#3C80B4] py-2 rounded-3xl ml-2"
-                onPress={() => {
-                  setBarcodeData(null);
-                  router.push("/main/inventory/addProduct");
-                }}
-              >
-                <Text className="text-white text-center font-semibold">Add</Text>
-              </Pressable>
+  <Pressable
+    className="flex-1 bg-[#3C80B4] py-2 rounded-3xl"
+    onPress={() => setBarcodeData(null)}
+  >
+    <Text className="text-white text-center font-semibold">
+      {barcodeData?.status === "Exists in Inventory" ? "Okay" : "Cancel"}
+    </Text>
+  </Pressable>
 
-            )}
-          </View>
+  {!checking && barcodeData?.status !== "Exists in Inventory" && (
+    <Pressable
+      className="flex-1 bg-[#3C80B4] py-2 rounded-3xl ml-2"
+      onPress={() => {
+        setBarcodeData(null);
+        router.push({
+          pathname: "/main/inventory/addProduct",
+          params: {
+            barcode: barcodeData.data,
+          },
+        });
+      }}
+    >
+      <Text className="text-white text-center font-semibold">Add</Text>
+    </Pressable>
+  )}
+</View>
+
         </View>
       )}
 
       <TouchableOpacity
-        style={{ backgroundColor: "#007DA5", padding: 16, borderRadius: 50, position: "absolute", bottom: 20, right: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 }}
+        style={{
+          backgroundColor: "#007DA5",
+          padding: 16,
+          borderRadius: 50,
+          position: "absolute",
+          bottom: 20,
+          right: 20,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 4,
+          elevation: 5,
+        }}
         onPress={openScanner}
       >
         <Ionicons name="barcode" size={28} color="white" />
