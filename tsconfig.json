@@ -9,6 +9,30 @@
         "@components/*": [
           "./components/*"
         ],
+        "@dashboard/*": [
+          "./components/dashboard/*"
+        ],
+        "@inventory/*": [
+          "./components/inventory/*"
+        ],
+        "@profile/*": [
+          "./components/profile/*"
+        ],
+        "@sales/*": [
+          "./components/sales/*"
+        ],
+        "@ui/*": [
+          "./components/ui/*"
+        ],
+        "@settings/*": [
+          "./components/settings/*"
+        ],
+        "@login/*": [
+          "./components/login/*"
+        ],
+        "@register/*": [
+          "./components/register/*"
+        ],
         "@utils/*": [
           "./utils/*"
         ],
@@ -31,7 +55,7 @@
           "./context/*"
         ],
         "@api/*": [
-          "./api/*"
+          "services/api/*"
         ]
     }
   },

@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import Header from "@components/header";
-import SalesCalculation from "@components/salesCalculation";
-import IncomeCalculation from "@components/incomeCalculation";
-import MostSoldItems from "@components/mostSoldItems";
-import RestockItems from "@components/restockItems";
-import Tabs from "@components/tabs"; // Import the Tabs component
+import { View, Text, ScrollView} from "react-native";
+import Header from "@ui/header";
+import SalesCalculation from "@dashboard/salesCalculation";
+import IncomeCalculation from "@dashboard/incomeCalculation";
+import MostSoldItems from "@dashboard/mostSoldItems";
+import RestockItems from "@dashboard/restockItems";
+import Tabs from "@ui/tabs"; 
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("Daily"); // State to track the active tab

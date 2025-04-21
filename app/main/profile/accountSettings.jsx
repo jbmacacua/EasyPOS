@@ -2,10 +2,10 @@ import { useState, useEffect, useMemo } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, Alert, ActivityIndicator, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import Header from "@components/header";
+import Header from "@ui/header";
 import { useRouter } from "expo-router";
 import { useSession } from "@context/auth";
-import { editProfile, getUserDetails, uploadProfileImage } from "../../../api/accounts";
+import { editProfile, getUserDetails, uploadProfileImage } from "@api/accounts";
 import * as FileSystem from "expo-file-system";
 
 export default function AccountSettings() {

@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "../context/authContext";
+import { useAuth } from "../../context/authContext";
 
 export default function Header() {
   const navigation = useNavigation(); // Get navigation object

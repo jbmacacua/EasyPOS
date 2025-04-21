@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
-import LoginForm from '@components/loginForm';
-import RegisterForm from '@components/registerForm';
-import LoginHeader from '@components/loginHeader';
+import LoginForm from '@login/loginForm';
+import RegisterForm from '@register/registerForm';
+import LoginHeader from '@login/loginHeader';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberPassword, setRememberPassword] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
-  const [role, setRole] = useState(null); // Add state for role
+  const [role, setRole] = useState(null); 
 
   return (
     <View className="flex-1 bg-[#3F89C1] pb-4">

@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import SettingsHeader from "@components/settingsHeader";
-import BusinessInformation from "@components/businessInformation";
-import EmployeesAccount from "@components/employeesAccount";
-import AboutUs from "@components/aboutUs";
+import SettingsHeader from "@settings/settingsHeader";
+import BusinessInformation from "@settings/businessInformation";
+import EmployeesAccount from "@settings/employeesAccount";
+import AboutUs from "@settings/aboutUs";
 
 export default function Settings() {
   const [selectedSection, setSelectedSection] = useState(null);

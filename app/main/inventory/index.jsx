@@ -2,10 +2,9 @@ import { useFocusEffect } from "@react-navigation/native";
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Header from "@components/header";
-import InventoryItem from "@components/inventory/inventoryItem";
+import Header from "@ui/header";
+import InventoryItem from "@inventory/inventoryItem";
 import BarcodeScanner from "./barcodeScanner";
-
 import { getProducts } from "@api/inventory";
 import { useSession } from "@context/auth";
 

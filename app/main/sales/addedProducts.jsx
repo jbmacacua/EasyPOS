@@ -1,8 +1,8 @@
 import React from "react";
 import { View, ScrollView } from "react-native";
-import { GestureHandlerRootView, PanGestureHandler } from "react-native-gesture-handler"; // Import gesture handlers
-import Header from "@components/header";
-import AddedProductComponent from "@components/employeeSales/addedProductComponent";
+import { GestureHandlerRootView} from "react-native-gesture-handler"; 
+import Header from "@ui/header";
+import AddedProductComponent from "@sales/addedProductComponent";
 
 export default function AddedProducts() {
   return (

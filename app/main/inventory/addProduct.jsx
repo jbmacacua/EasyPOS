@@ -1,12 +1,12 @@
 import { Text, View, TextInput, TouchableOpacity, Image } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import Header from '@components/header';
+import Header from '@ui/header';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { uploadProductImage, addProduct } from '@api/inventory';
 import { useSession } from '@context/auth';
-import ProductDetails from '@components/inventory/productDetails'; 
+import ProductDetails from '@inventory/productDetails'; 
 
 export default function AddProduct() {
     const router = useRouter();

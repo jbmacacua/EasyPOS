@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'; // Add ActivityIndicator
 import Icon from 'react-native-vector-icons/MaterialIcons'; // For eye icon
-import { useSession } from '../context/auth';
+import { useSession } from '../../context/auth';
 
 const RegisterForm = () => {
     const { signUp } = useSession();

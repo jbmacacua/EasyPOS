@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView } from "react-native";
-import Header from "@components/header";
-import Tabs from "@components/tabs"; // Import the Tabs component
-import TotalIncome from "@components/totalIncome";
-import SalesSummary from "@components/salesSummary";
+import Header from "@ui/header";
+import Tabs from "@ui/tabs"; 
+import TotalIncome from "@sales/totalIncome";
+import SalesSummary from "@sales/salesSummary";
 import BarcodeScanner from "./saleBarcodeScanner";
-import { useAuth } from '../../../context/authContext';
+import { useAuth } from '@context/authContext';
 
 export default function Sales() {
   const [activeTab, setActiveTab] = useState("Daily"); // State to track the active tab

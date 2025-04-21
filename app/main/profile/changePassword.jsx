@@ -1,8 +1,8 @@
 import { Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import React, { useState, useMemo } from 'react';
-import Header from "@components/header";
+import Header from "@ui/header";
 import { useRouter } from "expo-router";
-import { changePassword } from "../../../api/accounts";
+import { changePassword } from "@api/accounts";
 import { useSession } from "@context/auth";
 
 export default function ChangePassword() {
