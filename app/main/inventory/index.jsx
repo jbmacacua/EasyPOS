@@ -7,7 +7,7 @@ import Header from "@components/header";
 import InventoryItem from "@components/inventory/inventoryItem";
 import BarcodeScanner from "./barcodeScanner";
 
-import { getProducts } from "../../../api/inventory";
+import { getProducts } from "../../../services/api/inventory";
 
 import { useSession } from "@context/auth";
 
