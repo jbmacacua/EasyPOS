@@ -35,9 +35,8 @@ export default function SettingsHeader({ editButton, backButton, onEdit, onAdd }
           <TouchableOpacity onPress={onAdd}>
             <Feather name="plus-circle" size={30} color="white" />
           </TouchableOpacity>
-        ) : (
-          <View style={{ width: 34 }} /> // Placeholder for spacing if no edit/add button
         )}
+        {editButton === "none" && <View style={{ width: 34 }} />}
       </View>
     </View>
   );

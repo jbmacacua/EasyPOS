@@ -1,11 +1,3 @@
-
-import React, { useState, useMemo, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-
-import SettingsHeader from "@components/settingsHeader";
-import { useSession } from "@context/auth";
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -21,38 +13,11 @@ export default function Settings() {
   const [isAddModalVisible, setAddModalVisible] = useState(false);
   const navigation = useNavigation();
 
-  const { session, userRole } = useSession();
-
-  const parsedSession = useMemo(() => {
-    try {
-      return session ? JSON.parse(session) : null;
-    } catch (error) {
-      console.warn("Failed to parse session:", error);
-      return null;
-    }
-  }, [session]);
-
-  useEffect(() => {
-    if (!parsedSession) {
-      navigation.replace("/");
-    } else if (userRole === "sales") {
-      setSelectedSection("about");
-    }
-  }, [parsedSession, userRole]);
-
   const handleBack = () => {
-    if (editMode) {
-      setEditMode(false);
-    }
-
-    if (userRole === "sales") {
-      navigation.goBack();
+    if (selectedSection) {
+      setSelectedSection(null);
     } else {
-      if (selectedSection) {
-        setSelectedSection(null);
-      } else {
-        navigation.goBack();
-      }
+      navigation.goBack();
     }
   };
 
@@ -82,10 +47,10 @@ export default function Settings() {
             ? selectedSection === "business"
               ? "Business Information"
               : selectedSection === "employees"
-              ? "Employees Account"
-              : selectedSection === "about"
-              ? "About Us"
-              : ""
+                ? "Employees Account"
+                : selectedSection === "about"
+                  ? "About Us"
+                  : ""
             : "Settings"}
         </Text>
 
