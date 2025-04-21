@@ -5,7 +5,7 @@ import * as ImagePicker from "expo-image-picker";
 import Header from "@components/header";
 import { useRouter } from "expo-router";
 import { useSession } from "@context/auth";
-import { editProfile, getUserDetails, uploadProfileImage } from "../../../api/accounts";
+import { editProfile, getUserDetails, uploadProfileImage } from "@api/accounts";
 import * as FileSystem from "expo-file-system";
 
 export default function AccountSettings() {

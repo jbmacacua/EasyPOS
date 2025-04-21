@@ -2,7 +2,7 @@ import { Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator } fro
 import React, { useState, useMemo } from 'react';
 import Header from "@components/header";
 import { useRouter } from "expo-router";
-import { changePassword } from "../../../api/accounts";
+import { changePassword } from "@api/accounts";
 import { useSession } from "@context/auth";
 
 export default function ChangePassword() {

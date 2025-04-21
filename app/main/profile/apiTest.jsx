@@ -1,7 +1,7 @@
 import { View, Text, Button, TextInput } from 'react-native';
 import { useMemo, useState } from 'react';
 import { useSession } from '@context/auth';
-import { getTotalSalesForMonth, getProfitForMonth, getMostSoldItemsForMonth } from '../../../api/sales'; // Import the APIs
+import { getTotalSalesForMonth, getProfitForMonth, getMostSoldItemsForMonth } from '@api/sales'; // Import the APIs
 
 export default function ApiTestScreen() {
   const { session, businessId } = useSession();

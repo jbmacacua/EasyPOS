@@ -5,7 +5,7 @@ import Header from "@components/header";
 import { useRouter } from "expo-router";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSession } from "@context/auth";
-import { getUserDetails } from "../../../api/accounts";
+import { getUserDetails } from "@api/accounts";
 
 const Profile = () => {
   const router = useRouter();
