@@ -29,7 +29,10 @@
         ],
         "@context/*": [
           "./context/*"
-        ]
+        ],
+        "@api/*": [
+          "./services/api/*"
+        ],
     }
   },
   "include": [
