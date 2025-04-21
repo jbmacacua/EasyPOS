@@ -35,6 +35,7 @@ export async function getProducts(
     query = query.range(from, to);
 
     const { data, error, count } = await query;
+    console.log("Fetched products:", data);
 
     if (error) {
       throw error;
@@ -105,6 +106,7 @@ export async function checkExistingProduct(
     }
 
     const barcodeAvailable = data.length === 0;
+    console.log("Barcode Available: ", barcodeAvailable);
 
     return { success: true, barcodeAvailable };
   } catch (err) {
@@ -300,7 +302,9 @@ export async function addProduct(
       throw fetchError ;  
     }
 
-    return { success: true, newProductData};
+    console.log("New Product Data:", newProductData); 
+
+    return { success: true, newProductData,  productId: newProductData?.id };
   } catch (err) {
     return { success: false, error: err };
   }
