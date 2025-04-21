@@ -4,10 +4,12 @@ import Header from "@components/header";
 import Tabs from "@components/tabs"; // Import the Tabs component
 import TotalIncome from "@components/totalIncome";
 import SalesSummary from "@components/salesSummary";
-import SalesBarcodeScanner from "./salesBarcodeScanner";
+import BarcodeScanner from "./saleBarcodeScanner";
+import { useAuth } from '../../../context/authContext';
 
 export default function Sales() {
   const [activeTab, setActiveTab] = useState("Daily"); // State to track the active tab
+   const { userRole } = useAuth();
 
   return (
     <View className="bg-[#3F89C1] flex-1">
@@ -30,8 +32,7 @@ export default function Sales() {
             <SalesSummary activeTab={activeTab} />
           </View>
         </ScrollView>
-
-        <SalesBarcodeScanner />
+        {userRole == 'employee' && <BarcodeScanner />}
       </View>
     </View>
   );
