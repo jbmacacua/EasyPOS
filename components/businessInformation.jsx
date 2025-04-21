@@ -51,7 +51,7 @@ export default function BusinessInformation({ isModalVisible, setModalVisible })
 
       {/* Modal */}
       <Modal visible={isModalVisible} animationType="slide" transparent>
-        <View className="flex-1 justify-center bg-black p-5">
+        <View className="flex-1 justify-center bg-black/60 p-5">
           <View className="bg-white rounded-2xl p-6">
             <Text className="text-xl font-bold mb-4">Edit Business Information</Text>
 
