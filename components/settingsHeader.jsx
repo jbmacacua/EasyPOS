@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
-export default function SettingsHeader({ editButton, backButton, onEdit }) {
+export default function SettingsHeader({ editButton, backButton, onEdit, onAdd }) {
   return (
     <View className="bg-[#3C80B4] pb-5 relative overflow-hidden">
       {/* Background blobs */}
@@ -33,7 +33,7 @@ export default function SettingsHeader({ editButton, backButton, onEdit }) {
           </TouchableOpacity>
         )}
         {editButton === "add" && (
-          <TouchableOpacity>
+          <TouchableOpacity onPress={onAdd}>
             <Feather name="plus-circle" size={30} color="white" />
           </TouchableOpacity>
         )}

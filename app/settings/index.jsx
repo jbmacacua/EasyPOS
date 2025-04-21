@@ -10,6 +10,7 @@ import AboutUs from "@components/aboutUs";
 export default function Settings() {
   const [selectedSection, setSelectedSection] = useState(null);
   const [isModalVisible, setModalVisible] = useState(false);
+  const [isAddModalVisible, setAddModalVisible] = useState(false);
   const navigation = useNavigation();
 
   const handleBack = () => {
@@ -24,6 +25,10 @@ export default function Settings() {
     setModalVisible(true);
   };
 
+  const handleAddPress = () => {
+    setAddModalVisible(true);
+  };
+
   const editButton = selectedSection === "employees"
     ? "add"
     : selectedSection === "about"
@@ -34,7 +39,7 @@ export default function Settings() {
 
   return (
     <View className="bg-[#3F89C1] flex-1">
-      <SettingsHeader editButton={editButton} backButton={handleBack} onEdit={handleEditPress} />
+      <SettingsHeader editButton={editButton} backButton={handleBack} onEdit={handleEditPress} onAdd={handleAddPress} />
 
       <View className="bg-white rounded-t-[65px] flex-1">
         <Text className="text-[#3C80B4] text-[20px] font-bold text-center py-5">
@@ -52,7 +57,9 @@ export default function Settings() {
         {selectedSection === "business" && (
           <BusinessInformation isModalVisible={isModalVisible} setModalVisible={setModalVisible} />
         )}
-        {selectedSection === "employees" && <EmployeesAccount />}
+        {selectedSection === "employees" && (
+          <EmployeesAccount isAddModalVisible={isAddModalVisible} setAddModalVisible={setAddModalVisible} />
+          )}
         {selectedSection === "about" && <AboutUs />}
 
         {!selectedSection && (
