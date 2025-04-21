@@ -2,9 +2,8 @@ import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { View } from 'react-native';
 import Octicons from '@expo/vector-icons/Octicons';
-import '../../global.css';
-import { useState, useEffect } from 'react';
-import { useAuth } from '../../context/authContext';
+import '@css';
+import { useAuth } from '@context/authContext';
 
 export default function TabsLayout() {
   const  userRole  = useAuth();

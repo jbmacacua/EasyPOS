@@ -1,6 +1,6 @@
 import React from 'react';
 import { Stack } from 'expo-router';
-import { SessionProvider } from '../context/auth';
+import { SessionProvider } from '@context/auth';
 
 const AppLayout = () => {
   return (

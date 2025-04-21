@@ -55,8 +55,9 @@
           "./context/*"
         ],
         "@api/*": [
-          "services/api/*"
-        ]
+          "./services/api/*"
+        ],
+        "@css": ["./global.css"]     
     }
   },
   "include": [

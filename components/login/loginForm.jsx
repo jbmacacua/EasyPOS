@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import Icon from "react-native-vector-icons/FontAwesome";
 import { useRouter } from 'expo-router';
-import { useSession } from '../../context/auth'; 
+import { useSession } from '@context/auth'; 
 import { useStorageState } from '@hooks/useStorageState'; 
 
 const LoginForm = ({ email, setEmail, password, setPassword, rememberPassword, setRememberPassword }) => {
