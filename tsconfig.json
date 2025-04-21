@@ -31,7 +31,7 @@
           "./context/*"
         ],
         "@api/*": [
-          "./services/api/*"
+          "./api/*"
         ],
     }
   },
