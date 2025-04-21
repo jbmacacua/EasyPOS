@@ -1,28 +1,20 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useContext } from 'react';
 
-// Create Auth Context
-const AuthContext = createContext();
+// Create Auth Context with default value
+const AuthContext = createContext({
+  userRole: 'admin',
+  setUserRole: () => {}, // no-op to prevent errors if called
+});
 
 // Provider Component
 export const AuthProvider = ({ children }) => {
-    const [userRole, setUserRole] = useState(null);
+  const userRole = 'admin';
 
-    useEffect(() => {
-        const loadRole = async () => {
-            const storedRole = await AsyncStorage.getItem('role');
-            if (storedRole) {
-                setUserRole(storedRole);
-            }
-        };
-        loadRole();
-    }, []);
-
-    return (
-        <AuthContext.Provider value={{ userRole, setUserRole }}>
-            {children}
-        </AuthContext.Provider>
-    );
+  return (
+    <AuthContext.Provider value={{ userRole, setUserRole: () => {} }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 // Custom Hook to use AuthContext

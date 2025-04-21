@@ -27,9 +27,9 @@ export default function SalesCalculation({ activeTab }) {
     const [selectedFilter, setSelectedFilter] = useState(1); // Default to the first filter option
 
     // Dummy sales data
-    const dailySalesData = [1000, 1500, 1200, 1800, 2000, 1300, 1000, 1000, 2000]; // Simulated hourly data for daily
-    const weeklySalesData = [10000, 12000, 9000, 11000, 9500, 10000, 1000]; // Simulated sales data for weeks
-    const monthlySalesData = [30000, 40000, 35000, 42000]; // Simulated sales data for months
+    const dailySalesData = [823, 1187, 1023, 1578, 2124, 1389, 954, 1097, 1932]; // Simulated sales data with exact numbers
+    const weeklySalesData = [9023, 11478, 8475, 10456, 9812, 10189, 10987]; // More precise weekly sales figures
+    const monthlySalesData = [28145, 39123, 33267, 41289]; // Realistic monthly sales variations with exact figures
 
     // Reset selectedFilter when activeTab changes
     useEffect(() => {

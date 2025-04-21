@@ -26,7 +26,6 @@ export default function SettingsHeader({ editButton, backButton, onEdit, onAdd }
         <Text className="text-white text-[32px] absolute right-[37%] top-5 font-bold text-center flex-1">
           EasyPOS
         </Text>
-
         {editButton === "edit" && (
           <TouchableOpacity onPress={onEdit}>
             <Feather name="edit-3" size={30} color="white" />
@@ -36,8 +35,9 @@ export default function SettingsHeader({ editButton, backButton, onEdit, onAdd }
           <TouchableOpacity onPress={onAdd}>
             <Feather name="plus-circle" size={30} color="white" />
           </TouchableOpacity>
+        ) : (
+          <View style={{ width: 34 }} /> // Placeholder for spacing if no edit/add button
         )}
-        {editButton === "none" && <View style={{ width: 34 }} />}
       </View>
     </View>
   );

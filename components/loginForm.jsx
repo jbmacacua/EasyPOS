@@ -1,75 +1,66 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import Icon from "react-native-vector-icons/FontAwesome";
 import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from '../context/authContext'; // Import the global auth context
+import { useSession } from '../context/auth'; 
+import { useStorageState } from '@hooks/useStorageState'; 
 
 const LoginForm = ({ email, setEmail, password, setPassword, rememberPassword, setRememberPassword }) => {
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false); // Added loading state
     const router = useRouter();
-    const { setUserRole } = useAuth(); // Use global role setter
+    const { signIn, session, userRole } = useSession(); 
+
+    const [[loading, storedCredentials], setStoredCredentials] = useStorageState('credentials');
+
+    // Load stored credentials when ready
+    useEffect(() => {
+        if (!loading && storedCredentials) {
+            try {
+                const parsed = JSON.parse(storedCredentials);
+                const { email: storedEmail, password: storedPassword } = parsed;
+                setEmail(storedEmail);
+                setPassword(storedPassword);
+                setRememberPassword(true); 
+            } catch (err) {
+                console.error("Failed to parse stored credentials:", err);
+                setStoredCredentials(null);
+            }
+        }
+    }, [loading, storedCredentials]);
 
     useEffect(() => {
-        const initializeStorage = async () => {
-            try {
-                const storedEmail = await AsyncStorage.getItem('email');
-                const storedPassword = await AsyncStorage.getItem('password');
-                const storedRole = await AsyncStorage.getItem('role');
-
-                if (!storedEmail || !storedPassword || !storedRole) {
-                    await AsyncStorage.setItem('email', 'admin');
-                    await AsyncStorage.setItem('password', 'admin');
-                    await AsyncStorage.setItem('role', 'admin');
-
-                    await AsyncStorage.setItem('email_employee', 'employee');
-                    await AsyncStorage.setItem('password_employee', 'employee');
-                    await AsyncStorage.setItem('role_employee', 'employee');
-                }
-            } catch (error) {
-                console.error("Error initializing storage:", error);
-            }
-        };
-
-        initializeStorage();
-    }, []);
-
-    const handleLogin = async () => {
-        try {
-            const adminEmail = await AsyncStorage.getItem('email');
-            const adminPassword = await AsyncStorage.getItem('password');
-            const adminRole = await AsyncStorage.getItem('role');
-
-            const employeeEmail = await AsyncStorage.getItem('email_employee');
-            const employeePassword = await AsyncStorage.getItem('password_employee');
-            const employeeRole = await AsyncStorage.getItem('role_employee');
-
-            if ((email === adminEmail && password === adminPassword) || (email === employeeEmail && password === employeePassword)) {
-                const userRole = email === adminEmail ? adminRole : employeeRole;
-                
-                // Set role globally
-                setUserRole(userRole);
-                
-                console.log("User Role:", userRole);
-                
-                if (rememberPassword) {
-                    await AsyncStorage.setItem('email', email);
-                    await AsyncStorage.setItem('password', password);
-                    await AsyncStorage.setItem('role', userRole);
-                }
-
-                // Navigate based on role
-                if (userRole === 'admin') {
-                    router.push('/main/dashboard');
-                } else if (userRole === 'employee') {
-                    router.push('/main/sales');
-                }
+        if (userRole) {
+            if (userRole === "owner") {
+                router.push('/main/dashboard');
             } else {
-                Alert.alert('Login Failed', 'Invalid username or password.');
+                router.push('/main/sales');
             }
-        } catch (error) {
-            console.error("Error logging in:", error);
         }
+    }, [userRole]); 
+
+    // Handle login
+    const handleLogin = async (email, password, remember) => {
+
+        if (!email || !password){
+            return Alert.alert('Login Failed','Email and Password cannot be null.');
+        }
+
+        setIsLoading(true); // Start loading animation
+
+        const success = await signIn({ email, password });
+
+        setIsLoading(false); // Stop loading animation
+
+        if (success) {
+            if (remember) {
+                setStoredCredentials(JSON.stringify({ email, password }));
+            } else {
+                setStoredCredentials(null);
+            }
+        }
+
+        return;
     };
 
     return (
@@ -115,11 +106,22 @@ const LoginForm = ({ email, setEmail, password, setPassword, rememberPassword, s
                 </View>
 
                 <View className="pt-12">
-                    <TouchableOpacity className="bg-[#3C80B4] py-3 rounded-lg w-60 mx-auto"
-                        onPress={handleLogin}>
-                        <Text className="text-white text-center text-lg font-semibold">Login</Text>
+                    <TouchableOpacity
+                        className="bg-[#3C80B4] py-3 rounded-lg w-60 mx-auto"
+                        onPress={() => handleLogin(email, password, rememberPassword)}
+                        disabled={isLoading} // Disable button while loading
+                    >
+                        <Text className="text-white text-center text-lg font-semibold">
+                            {isLoading ? 'Logging in...' : 'Login'}
+                        </Text>
                     </TouchableOpacity>
                 </View>
+
+                {isLoading && (
+                    <View className="flex items-center mt-4">
+                        <ActivityIndicator size="large" color="#3C80B4" />
+                    </View>
+                )}
             </View>
         </View>
     );

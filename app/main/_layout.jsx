@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/authContext';
 
 export default function TabsLayout() {
-  const { userRole } = useAuth();
+  const  userRole  = useAuth();
 
   return (
     <Tabs
