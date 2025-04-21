@@ -1,16 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native"; // Import navigation
+import { useNavigation } from "@react-navigation/native";
 import SettingsHeader from "@components/settingsHeader";
-
-// Import section components
 import BusinessInformation from "@components/businessInformation";
 import EmployeesAccount from "@components/employeesAccount";
 import AboutUs from "@components/aboutUs";
 
 export default function Settings() {
   const [selectedSection, setSelectedSection] = useState(null);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [isAddModalVisible, setAddModalVisible] = useState(false);
   const navigation = useNavigation();
 
   const handleBack = () => {
@@ -21,7 +21,14 @@ export default function Settings() {
     }
   };
 
-  // Determine which icon to show
+  const handleEditPress = () => {
+    setModalVisible(true);
+  };
+
+  const handleAddPress = () => {
+    setAddModalVisible(true);
+  };
+
   const editButton = selectedSection === "employees"
     ? "add"
     : selectedSection === "about"
@@ -32,7 +39,7 @@ export default function Settings() {
 
   return (
     <View className="bg-[#3F89C1] flex-1">
-      <SettingsHeader editButton={editButton} backButton={handleBack} />
+      <SettingsHeader editButton={editButton} backButton={handleBack} onEdit={handleEditPress} onAdd={handleAddPress} />
 
       <View className="bg-white rounded-t-[65px] flex-1">
         <Text className="text-[#3C80B4] text-[20px] font-bold text-center py-5">
@@ -47,41 +54,33 @@ export default function Settings() {
             : "Settings"}
         </Text>
 
-
-        {/* Render the selected section or show the settings list */}
-        {selectedSection === "business" && <BusinessInformation />}
-        {selectedSection === "employees" && <EmployeesAccount />}
+        {selectedSection === "business" && (
+          <BusinessInformation isModalVisible={isModalVisible} setModalVisible={setModalVisible} />
+        )}
+        {selectedSection === "employees" && (
+          <EmployeesAccount isAddModalVisible={isAddModalVisible} setAddModalVisible={setAddModalVisible} />
+          )}
         {selectedSection === "about" && <AboutUs />}
 
         {!selectedSection && (
           <ScrollView contentContainerStyle={{ padding: 8 }}>
-            <TouchableOpacity
-              className="bg-white p-3 mb-4 border-b border-[#3C80B4] rounded-lg flex-row items-center justify-between"
-              onPress={() => setSelectedSection("business")}
-            >
-              <Text className="text-black text-[18px] font-semibold">Business Information</Text>
-              <Feather name="chevron-right" size={24} color="#3C80B4" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="bg-white p-3 mb-4 border-b border-[#3C80B4] rounded-lg flex-row items-center justify-between"
-              onPress={() => setSelectedSection("employees")}
-            >
-              <Text className="text-black text-[18px] font-semibold">Employees Account</Text>
-              <Feather name="chevron-right" size={24} color="#3C80B4" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="bg-white p-3 mb-4 border-b border-[#3C80B4] rounded-lg flex-row items-center justify-between"
-              onPress={() => setSelectedSection("about")}
-            >
-              <Text className="text-black text-[18px] font-semibold">About Us</Text>
-              <Feather name="chevron-right" size={24} color="#3C80B4" />
-            </TouchableOpacity>
+            {[
+              { label: "Business Information", key: "business" },
+              { label: "Employees Account", key: "employees" },
+              { label: "About Us", key: "about" },
+            ].map(({ label, key }) => (
+              <TouchableOpacity
+                key={key}
+                className="bg-white p-3 mb-4 border-b border-[#3C80B4] rounded-lg flex-row items-center justify-between"
+                onPress={() => setSelectedSection(key)}
+              >
+                <Text className="text-black text-[18px] font-semibold">{label}</Text>
+                <Feather name="chevron-right" size={24} color="#3C80B4" />
+              </TouchableOpacity>
+            ))}
           </ScrollView>
         )}
       </View>
     </View>
   );
 }
-
