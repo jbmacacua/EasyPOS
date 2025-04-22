@@ -6,7 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { uploadProductImage, addProduct } from '@api/inventory';
 import { useSession } from '@context/auth';
-import ProductDetails from '@inventory/productDetails'; 
+import ProductDetails from './[id]'; 
 
 export default function AddProduct() {
     const router = useRouter();
