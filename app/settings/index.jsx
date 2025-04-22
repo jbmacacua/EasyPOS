@@ -26,14 +26,6 @@ export default function Settings() {
     }
   }, [session]);
 
-  useEffect(() => {
-    if (!parsedSession) {
-      navigation.replace("/");
-    } else if (userRole !== "owner") {
-      setSelectedSection("about");
-    }
-  }, [parsedSession, userRole]);
-
   const handleBack = () => {
     if (selectedSection) {
       setSelectedSection(null);
@@ -98,8 +90,12 @@ export default function Settings() {
         {!selectedSection && (
           <ScrollView contentContainerStyle={{ padding: 8 }}>
             {[
-              { label: "Business Information", key: "business" },
-              { label: "Employees Account", key: "employees" },
+              ...(userRole === "owner"
+                ? [
+                  { label: "Business Information", key: "business" },
+                  { label: "Employees Account", key: "employees" },
+                ]
+                : []),
               { label: "About Us", key: "about" },
             ].map(({ label, key }) => (
               <TouchableOpacity
