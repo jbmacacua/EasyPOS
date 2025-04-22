@@ -1,32 +1,57 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, Modal, TouchableOpacity } from "react-native";
+import React, { useState, useMemo, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { useSession } from "@context/auth";
+import { editBusinessInformation, getBusinessDetails } from "@api/business";
 
-export default function BusinessInformation({ isModalVisible, setModalVisible }) {
-  const [storeName, setStoreName] = useState("EasyPOS Store");
-  const [contactNumber, setContactNumber] = useState("+123 456 7890");
-  const [email, setEmail] = useState("contact@easypos.com");
-  const [address, setAddress] = useState("1234 Main St, City, Country");
+export default function BusinessInformation({ isEditing, setIsEditing }) {
+  const { session, userRole, businessId } = useSession();
 
-  // Temp states for modal edits
-  const [tempStoreName, setTempStoreName] = useState(storeName);
-  const [tempContact, setTempContact] = useState(contactNumber);
-  const [tempEmail, setTempEmail] = useState(email);
-  const [tempAddress, setTempAddress] = useState(address);
+  const parsedSession = useMemo(() => {
+    try {
+      return session ? JSON.parse(session) : null;
+    } catch (error) {
+      console.warn("Failed to parse session:", error);
+      return null;
+    }
+  }, [session]);
 
-  const handleSave = () => {
-    setStoreName(tempStoreName);
-    setContactNumber(tempContact);
-    setEmail(tempEmail);
-    setAddress(tempAddress);
-    setModalVisible(false);
-  };
+  const userId = parsedSession?.user?.id;
 
-  const handleCancel = () => {
-    setTempStoreName(storeName);
-    setTempContact(contactNumber);
-    setTempEmail(email);
-    setTempAddress(address);
-    setModalVisible(false);
+  const [storeName, setStoreName] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+
+  // Fetch business details on mount
+  useEffect(() => {
+    const fetchBusinessDetails = async () => {
+      const response = await getBusinessDetails(userId, businessId);
+      if (response.success) {
+        const { businessDetails } = response;
+        setStoreName(businessDetails.store_name);
+        setContactNumber(businessDetails.contact_number);
+        setEmail(businessDetails.email_address);
+        setAddress(businessDetails.address);
+      }
+    };
+    fetchBusinessDetails();
+  }, [userId, businessId]);
+
+  const handleSave = async () => {
+    const response = await editBusinessInformation(
+      storeName,
+      contactNumber,
+      email,
+      address,
+      userId,
+      businessId
+    );
+    if (response.success) {
+      setIsEditing(false); // Disable editing mode
+    } else {
+      // Handle error
+      console.warn("Error saving business information:", response.error);
+    }
   };
 
   return (
@@ -34,84 +59,64 @@ export default function BusinessInformation({ isModalVisible, setModalVisible })
       {/* Displayed info */}
       <View className="mb-4">
         <Text className="text-black text-[16px] py-2">Store Name:</Text>
-        <Text className="text-[16px] font-medium p-4 bg-gray-100 rounded-lg">{storeName}</Text>
+        <TextInput
+          value={storeName}
+          onChangeText={setStoreName}
+          editable={isEditing}
+          className="text-[16px] font-medium p-4 bg-gray-100 rounded-lg"
+          placeholder="Enter store name"
+        />
       </View>
       <View className="mb-4">
         <Text className="text-black text-[16px] py-2">Contact Number:</Text>
-        <Text className="text-[16px] font-medium p-4 bg-gray-100 rounded-lg">{contactNumber}</Text>
+        <TextInput
+          value={contactNumber}
+          onChangeText={setContactNumber}
+          editable={isEditing}
+          keyboardType="phone-pad"
+          className="text-[16px] font-medium p-4 bg-gray-100 rounded-lg"
+          placeholder="Enter contact number"
+        />
       </View>
       <View className="mb-4">
         <Text className="text-black text-[16px] py-2">Email:</Text>
-        <Text className="text-[16px] font-medium p-4 bg-gray-100 rounded-lg">{email}</Text>
+        <TextInput
+          value={email}
+          onChangeText={setEmail}
+          editable={isEditing}
+          keyboardType="email-address"
+          className="text-[16px] font-medium p-4 bg-gray-100 rounded-lg"
+          placeholder="Enter email"
+        />
       </View>
       <View className="mb-4">
         <Text className="text-black text-[16px] py-2">Address:</Text>
-        <Text className="text-[16px] font-medium p-4 bg-gray-100 rounded-lg">{address}</Text>
+        <TextInput
+          value={address}
+          onChangeText={setAddress}
+          editable={isEditing}
+          multiline
+          className="text-[16px] font-medium p-4 bg-gray-100 rounded-lg"
+          placeholder="Enter address"
+        />
       </View>
 
-      {/* Modal */}
-      <Modal visible={isModalVisible} animationType="slide" transparent>
-        <View className="flex-1 justify-center bg-black/60 p-5">
-          <View className="bg-white rounded-2xl p-6">
-            <Text className="text-xl font-bold mb-4">Edit Business Information</Text>
-
-            {/* Store Name */}
-            <Text className="text-black font-medium mb-1">Store Name</Text>
-            <TextInput
-              value={tempStoreName}
-              onChangeText={setTempStoreName}
-              className="bg-gray-100 p-4 rounded-lg mb-3 text-black"
-              placeholder="Enter store name"
-            />
-
-            {/* Contact Number */}
-            <Text className="text-black font-medium mb-1">Contact Number</Text>
-            <TextInput
-              value={tempContact}
-              onChangeText={setTempContact}
-              keyboardType="phone-pad"
-              className="bg-gray-100 p-4 rounded-lg mb-3 text-black"
-              placeholder="Enter contact number"
-            />
-
-            {/* Email */}
-            <Text className="text-black font-medium mb-1">Email</Text>
-            <TextInput
-              value={tempEmail}
-              onChangeText={setTempEmail}
-              keyboardType="email-address"
-              className="bg-gray-100 p-4 rounded-lg mb-3 text-black"
-              placeholder="Enter email"
-            />
-
-            {/* Address */}
-            <Text className="text-black font-medium mb-1">Address</Text>
-            <TextInput
-              value={tempAddress}
-              onChangeText={setTempAddress}
-              multiline
-              className="bg-gray-100 p-4 rounded-lg mb-4 text-black"
-              placeholder="Enter address"
-            />
-
-            {/* Action buttons */}
-            <View className="flex-row justify-end space-x-3 gap-4">
-              <TouchableOpacity
-                onPress={handleCancel}
-                className="border border-gray-400 px-5 py-2 rounded-lg"
-              >
-                <Text className="text-gray-700 font-medium">Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleSave}
-                className="bg-[#3C80B4] px-6 py-2 rounded-lg"
-              >
-                <Text className="text-white font-medium">Save</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+      {isEditing && (
+        <View className="flex-row justify-end space-x-3 gap-4">
+          <TouchableOpacity
+            onPress={() => setIsEditing(false)}
+            className="border border-gray-400 px-5 py-2 rounded-lg"
+          >
+            <Text className="text-gray-700 font-medium">Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleSave}
+            className="bg-[#3C80B4] px-6 py-2 rounded-lg"
+          >
+            <Text className="text-white font-medium">Save</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
+      )}
     </View>
   );
 }

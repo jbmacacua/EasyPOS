@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -6,12 +6,33 @@ import SettingsHeader from "@settings/settingsHeader";
 import BusinessInformation from "@settings/businessInformation";
 import EmployeesAccount from "@settings/employeesAccount";
 import AboutUs from "@settings/aboutUs";
+import { useSession } from "@context/auth";
 
 export default function Settings() {
   const [selectedSection, setSelectedSection] = useState(null);
   const [isModalVisible, setModalVisible] = useState(false);
   const [isAddModalVisible, setAddModalVisible] = useState(false);
+  const [isEditingBusinessInfo, setIsEditingBusinessInfo] = useState(false); // New state for editing
   const navigation = useNavigation();
+
+  const { session, userRole } = useSession();
+
+  const parsedSession = useMemo(() => {
+    try {
+      return session ? JSON.parse(session) : null;
+    } catch (error) {
+      console.warn("Failed to parse session:", error);
+      return null;
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (!parsedSession) {
+      navigation.replace("/");
+    } else if (userRole !== "owner") {
+      setSelectedSection("about");
+    }
+  }, [parsedSession, userRole]);
 
   const handleBack = () => {
     if (selectedSection) {
@@ -22,24 +43,30 @@ export default function Settings() {
   };
 
   const handleEditPress = () => {
-    setModalVisible(true);
+    setIsEditingBusinessInfo((prev) => !prev); // Toggle editing mode
   };
 
   const handleAddPress = () => {
     setAddModalVisible(true);
   };
 
-  const editButton = selectedSection === "employees"
-    ? "add"
-    : selectedSection === "about"
-      ? "none"
+  const editButton =
+    selectedSection === "employees"
+      ? "add"
+      : selectedSection === "business"
+      ? "edit"
       : selectedSection
-        ? "edit"
-        : null;
+      ? "none"
+      : null;
 
   return (
     <View className="bg-[#3F89C1] flex-1">
-      <SettingsHeader editButton={editButton} backButton={handleBack} onEdit={handleEditPress} onAdd={handleAddPress} />
+      <SettingsHeader
+        editButton={editButton}
+        backButton={handleBack}
+        onEdit={handleEditPress}
+        onAdd={handleAddPress}
+      />
 
       <View className="bg-white rounded-t-[65px] flex-1">
         <Text className="text-[#3C80B4] text-[20px] font-bold text-center py-5">
@@ -47,19 +74,25 @@ export default function Settings() {
             ? selectedSection === "business"
               ? "Business Information"
               : selectedSection === "employees"
-                ? "Employees Account"
-                : selectedSection === "about"
-                  ? "About Us"
-                  : ""
+              ? "Employees Account"
+              : selectedSection === "about"
+              ? "About Us"
+              : ""
             : "Settings"}
         </Text>
 
         {selectedSection === "business" && (
-          <BusinessInformation isModalVisible={isModalVisible} setModalVisible={setModalVisible} />
+          <BusinessInformation
+            isEditing={isEditingBusinessInfo}
+            setIsEditing={setIsEditingBusinessInfo}
+          />
         )}
         {selectedSection === "employees" && (
-          <EmployeesAccount isAddModalVisible={isAddModalVisible} setAddModalVisible={setAddModalVisible} />
-          )}
+          <EmployeesAccount
+            isAddModalVisible={isAddModalVisible}
+            setAddModalVisible={setAddModalVisible}
+          />
+        )}
         {selectedSection === "about" && <AboutUs />}
 
         {!selectedSection && (

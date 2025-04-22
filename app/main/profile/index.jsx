@@ -1,8 +1,8 @@
-import { View, Text, TouchableOpacity, ActivityIndicator, Image } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, Image, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import Header from "@ui/header";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { useSession } from "@context/auth";
 import { getUserDetails } from "@api/accounts";
 
@@ -11,7 +11,7 @@ const Profile = () => {
   const { session, signOut } = useSession();
 
   const [userDetails, setUserDetails] = useState(null);
-  const [loading, setLoading] = useState(true); // Loading state
+  const [loadingDetails, setLoadingDetails] = useState(true);
   const [logoutLoading, setLogoutLoading] = useState(false);
 
   const parsedSession = useMemo(() => {
@@ -23,44 +23,43 @@ const Profile = () => {
     }
   }, [session]);
 
-  useEffect(() => {
-    const fetchUserDetails = async () => {
-      const userId = parsedSession?.user?.id;
-
-      if (userId) {
-        const res = await getUserDetails(userId);
-        if (res.success) {
-          setUserDetails(res.userDetails);
-        } else {
-          console.error("Error fetching user details:", res.error);
-        }
-        setLoading(false); // Set loading to false after data fetch is complete
+  const fetchUserDetails = useCallback(async () => {
+    const userId = parsedSession?.user?.id;
+    if (userId) {
+      setLoadingDetails(true);
+      const res = await getUserDetails(userId);
+      if (res.success) {
+        setUserDetails(res.userDetails);
+      } else {
+        console.error("Error fetching user details:", res.error);
       }
-    };
-
-    fetchUserDetails();
+      setLoadingDetails(false);
+    }
   }, [parsedSession]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserDetails();
+    }, [fetchUserDetails])
+  );
+
+  useEffect(() => {
+    if (parsedSession?.user?.id && loadingDetails) {
+      fetchUserDetails();
+    }
+  }, [parsedSession, fetchUserDetails, loadingDetails]);
 
   const handleLogout = async () => {
     try {
-      setLogoutLoading(true); // Start loading
+      setLogoutLoading(true);
       await signOut();
     } catch (error) {
       console.error("Error logging out:", error);
       Alert.alert('Logout Failed', 'An error occurred while logging out. Please try again.');
     } finally {
-      setLogoutLoading(false); // Stop loading
+      setLogoutLoading(false);
     }
   };
-
-  // Show loading spinner while data is being fetched
-  if (loading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#007DA5" />
-      </View>
-    );
-  }
 
   return (
     <View className="bg-[#3F89C1] flex-1">
@@ -68,42 +67,66 @@ const Profile = () => {
       <View className="flex-1 bg-white rounded-t-[65px] px-6 py-6">
         <View className="flex-1">
           {/* Profile Info */}
-          <View>
-            <View className="flex-row items-center space-x-4 mb-6">
-              
-            {userDetails?.profile_image ? (
+          <View className="mb-6">
+            {userDetails ? (
+              <View className="flex-row items-center space-x-4">
+                {userDetails.profile_image ? (
                   <Image
-                      source={{ uri: userDetails.profile_image }}
-                      className="w-20 h-20 rounded-full"
-                      resizeMode="cover"
+                    source={{ uri: userDetails.profile_image }}
+                    className="w-20 h-20 rounded-full"
+                    resizeMode="cover"
                   />
-              ) : (
+                ) : (
                   <View className="w-20 h-20 bg-blue-400 rounded-full flex items-center justify-center">
-                      <Feather name="user" size={32} color="black" />
+                    <Feather name="user" size={32} color="black" />
                   </View>
-              )}
-              <View className="ml-8">
-                <Text className="text-lg font-semibold">{userDetails?.first_name + " " +  userDetails?.last_name || "No Name"}</Text>
-                <Text className="text-gray-600">{userDetails?.contact_number || "No Number"}</Text>
-                <Text className="text-gray-600">{userDetails?.address || "No Address"}</Text>
+                )}
+                <View className="ml-8">
+                  <Text className="text-lg font-semibold">
+                    {userDetails.first_name + " " + userDetails.last_name || "No Name"}
+                  </Text>
+                  <Text className="text-gray-600">{userDetails.contact_number || "No Number"}</Text>
+                  <Text className="text-gray-600">{userDetails.address || "No Address"}</Text>
+                </View>
+                {loadingDetails && (
+                  <ActivityIndicator className="ml-4" size="small" color="#007DA5" />
+                )}
               </View>
-            </View>
-
-            {/* Settings Options */}
-            <View className="border-t border-gray-300 mt-4">
-              <TouchableOpacity className="flex-row justify-between items-center py-4 border-b border-gray-300" onPress={() => router.push("/main/profile/accountSettings")}>
-                <Text className="text-base text-black">Account Settings</Text>
-                <Feather name="chevron-right" size={20} color="black" />
-              </TouchableOpacity>
-              <TouchableOpacity className="flex-row justify-between items-center py-4" onPress={() => router.push("/main/profile/changePassword")}>
-                <Text className="text-base text-black">Change Password</Text>
-                <Feather name="chevron-right" size={20} color="black" />
-              </TouchableOpacity>
-            </View>
+            ) : (
+              <View className="flex-row items-center space-x-4">
+                <View className="w-20 h-20 rounded-full justify-center items-center">
+                  <ActivityIndicator size="large" color="#007DA5" />
+                </View>
+                <View>
+                  <Text className="text-lg font-semibold">Loading...</Text>
+                  <Text className="text-gray-600">Loading...</Text>
+                  <Text className="text-gray-600">Loading...</Text>
+                </View>
+              </View>
+            )}
           </View>
 
-          {/* Logout Button */}
-          <View className="mt-auto">
+          {/* Settings Options */}
+          <View className="border-t border-gray-300 mt-4">
+            <TouchableOpacity
+              className="flex-row justify-between items-center py-4 border-b border-gray-300"
+              onPress={() => router.push("/main/profile/accountSettings")}
+            >
+              <Text className="text-base text-black">Account Settings</Text>
+              <Feather name="chevron-right" size={20} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-row justify-between items-center py-4"
+              onPress={() => router.push("/main/profile/changePassword")}
+            >
+              <Text className="text-base text-black">Change Password</Text>
+              <Feather name="chevron-right" size={20} color="black" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Logout Button */}
+        <View className="mt-auto">
           <TouchableOpacity
             className="bg-[#007DA5] py-3 rounded-xl flex-row items-center justify-center"
             onPress={handleLogout}
@@ -115,7 +138,6 @@ const Profile = () => {
               <Text className="text-white text-center font-semibold text-lg">Logout</Text>
             )}
           </TouchableOpacity>
-          </View>
         </View>
       </View>
     </View>
