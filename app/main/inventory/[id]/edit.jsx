@@ -18,7 +18,7 @@ const EditProduct = () => {
     totalQuantitySinceRestock: '',
   });
 
-  const userId = supabase.auth.getUser().then(res => res.data.user.id); // you can memo this or store in context
+  const userId = supabase.auth.getUser().then(res => res.data.user.id); 
 
   useEffect(() => {
     const loadProduct = async () => {
