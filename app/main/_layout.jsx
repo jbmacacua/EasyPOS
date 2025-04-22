@@ -1,12 +1,22 @@
+import { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { View } from 'react-native';
 import Octicons from '@expo/vector-icons/Octicons';
 import '@css';
-import { useAuth } from '@context/authContext';
+import { useSession } from '@context/auth'; // <- Use this instead of useAuth
+import { useRouter } from 'expo-router'; // Import the useRouter hook
 
 export default function TabsLayout() {
-  const  userRole  = useAuth();
+  const { userRole } = useSession(); // Get user role from global context
+  const router = useRouter(); // Use the router hook
+
+  useEffect(() => {
+    // Programmatically navigate to the correct tab based on userRole
+    if (userRole !== 'sales') {
+      router.replace('/main/dashboard'); // Navigate to 'dashboard' for non-sales roles
+    }
+  }, [userRole, router]);
 
   return (
     <Tabs
@@ -54,7 +64,7 @@ export default function TabsLayout() {
         options={{
           headerShown: false,
           tabBarShowLabel: false,
-          href: userRole === 'employee' ? null : undefined,
+          href: userRole === 'sales' ? null : undefined,
         }}
       />
 
