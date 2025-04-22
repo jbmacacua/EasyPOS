@@ -39,10 +39,10 @@ const EmployeeItem = ({
       />
       <View className="flex-1">
         <Text className="text-black text-[16px] font-semibold">
-          {employee.name}
+          {employee.firstName} {employee.lastName}
         </Text>
         <Text className="text-gray-400">{employee.contactNo}</Text>
-        <Text className="text-gray-500">{employee.position}</Text>
+        <Text className="text-gray-500">{employee.userRole}</Text>
       </View>
       <TouchableOpacity onPress={toggleDropdown}>
         <MaterialIcons name="more-vert" size={24} color="black" />
@@ -78,58 +78,63 @@ const EmployeesAccount = ({ isAddModalVisible, setAddModalVisible }) => {
     {
       id: 1,
       picture: "https://randomuser.me/api/portraits/men/1.jpg",
-      name: "Employee Jr",
+      firstName: "Employee",
+      lastName: "Jr",
+      address: "123 Example Street",
       contactNo: "123-456-7890",
-      position: "Sales",
+      userRole: "Sales",
     },
     {
       id: 2,
       picture: "https://randomuser.me/api/portraits/women/2.jpg",
-      name: "Joana Marie",
+      firstName: "Joana",
+      lastName: "Marie",
+      address: "456 Avenue Road",
       contactNo: "987-654-3210",
-      position: "Sales",
+      userRole: "Inventory",
     },
   ]);
 
   const [activeDropdown, setActiveDropdown] = useState(null);
 
   // States for new employee
-  const [newName, setNewName] = useState("");
-  const [newContact, setNewContact] = useState("");
-  const [newPosition, setNewPosition] = useState("");
   const [newPicture, setNewPicture] = useState("");
+  const [newFirstName, setNewFirstName] = useState("");
+  const [newLastName, setNewLastName] = useState("");
+  const [newAddress, setNewAddress] = useState("");
+  const [newContact, setNewContact] = useState("");
+  const [newRole, setNewRole] = useState("Sales");
 
   // Edit modal state
   const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
 
+  const clearFields = () => {
+    setNewPicture("");
+    setNewFirstName("");
+    setNewLastName("");
+    setNewAddress("");
+    setNewContact("");
+    setNewRole("Sales");
+  };
+
   const handleAddEmployee = () => {
     const newEmployee = {
       id: Date.now(),
-      name: newName,
-      contactNo: newContact,
-      position: newPosition,
       picture: newPicture || "https://randomuser.me/api/portraits/lego/1.jpg",
+      firstName: newFirstName,
+      lastName: newLastName,
+      address: newAddress,
+      contactNo: newContact,
+      userRole: newRole,
     };
     setEmployees([...employees, newEmployee]);
     clearFields();
     setAddModalVisible(false);
   };
 
-  const handleCancelAdd = () => {
-    clearFields();
-    setAddModalVisible(false);
-  };
-
-  const clearFields = () => {
-    setNewName("");
-    setNewContact("");
-    setNewPosition("");
-    setNewPicture("");
-  };
-
   const handleEdit = (employee) => {
-    setEditingEmployee(employee);
+    setEditingEmployee({ ...employee });
     setEditModalVisible(true);
   };
 
@@ -187,11 +192,27 @@ const EmployeesAccount = ({ isAddModalVisible, setAddModalVisible }) => {
                 />
               ) : null}
 
-              <Text className="text-black font-medium mb-1">Name</Text>
+              <Text className="text-black font-medium mb-1">First Name</Text>
               <TextInput
-                value={newName}
-                onChangeText={setNewName}
-                placeholder="Enter full name"
+                value={newFirstName}
+                onChangeText={setNewFirstName}
+                placeholder="Enter first name"
+                className="bg-gray-100 p-4 rounded-lg mb-3 text-black"
+              />
+
+              <Text className="text-black font-medium mb-1">Last Name</Text>
+              <TextInput
+                value={newLastName}
+                onChangeText={setNewLastName}
+                placeholder="Enter last name"
+                className="bg-gray-100 p-4 rounded-lg mb-3 text-black"
+              />
+
+              <Text className="text-black font-medium mb-1">Address</Text>
+              <TextInput
+                value={newAddress}
+                onChangeText={setNewAddress}
+                placeholder="Enter address"
                 className="bg-gray-100 p-4 rounded-lg mb-3 text-black"
               />
 
@@ -204,17 +225,30 @@ const EmployeesAccount = ({ isAddModalVisible, setAddModalVisible }) => {
                 className="bg-gray-100 p-4 rounded-lg mb-3 text-black"
               />
 
-              <Text className="text-black font-medium mb-1">Position</Text>
-              <TextInput
-                value={newPosition}
-                onChangeText={setNewPosition}
-                placeholder="Enter position"
-                className="bg-gray-100 p-4 rounded-lg mb-4 text-black"
-              />
+              <Text className="text-black font-medium mb-2">User Role</Text>
+              <View className="flex-row mb-4 gap-4">
+                {["Sales", "Inventory"].map((role) => (
+                  <TouchableOpacity
+                    key={role}
+                    onPress={() => setNewRole(role)}
+                    className="flex-row items-center gap-2"
+                  >
+                    <View
+                      className={`w-4 h-4 rounded-full border ${
+                        newRole === role ? "bg-[#3C80B4]" : "border-gray-400"
+                      }`}
+                    />
+                    <Text className="text-black">{role}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
               <View className="flex-row justify-end gap-4">
                 <TouchableOpacity
-                  onPress={handleCancelAdd}
+                  onPress={() => {
+                    clearFields();
+                    setAddModalVisible(false);
+                  }}
                   className="border border-gray-400 px-5 py-2 rounded-lg"
                 >
                   <Text className="text-gray-700 font-medium">Cancel</Text>
@@ -252,13 +286,33 @@ const EmployeesAccount = ({ isAddModalVisible, setAddModalVisible }) => {
                 />
               ) : null}
 
-              <Text className="text-black font-medium mb-1">Name</Text>
+              <Text className="text-black font-medium mb-1">First Name</Text>
               <TextInput
-                value={editingEmployee?.name || ""}
+                value={editingEmployee?.firstName || ""}
                 onChangeText={(text) =>
-                  setEditingEmployee((prev) => ({ ...prev, name: text }))
+                  setEditingEmployee((prev) => ({ ...prev, firstName: text }))
                 }
-                placeholder="Enter full name"
+                placeholder="Enter first name"
+                className="bg-gray-100 p-4 rounded-lg mb-3 text-black"
+              />
+
+              <Text className="text-black font-medium mb-1">Last Name</Text>
+              <TextInput
+                value={editingEmployee?.lastName || ""}
+                onChangeText={(text) =>
+                  setEditingEmployee((prev) => ({ ...prev, lastName: text }))
+                }
+                placeholder="Enter last name"
+                className="bg-gray-100 p-4 rounded-lg mb-3 text-black"
+              />
+
+              <Text className="text-black font-medium mb-1">Address</Text>
+              <TextInput
+                value={editingEmployee?.address || ""}
+                onChangeText={(text) =>
+                  setEditingEmployee((prev) => ({ ...prev, address: text }))
+                }
+                placeholder="Enter address"
                 className="bg-gray-100 p-4 rounded-lg mb-3 text-black"
               />
 
@@ -273,15 +327,27 @@ const EmployeesAccount = ({ isAddModalVisible, setAddModalVisible }) => {
                 className="bg-gray-100 p-4 rounded-lg mb-3 text-black"
               />
 
-              <Text className="text-black font-medium mb-1">Position</Text>
-              <TextInput
-                value={editingEmployee?.position || ""}
-                onChangeText={(text) =>
-                  setEditingEmployee((prev) => ({ ...prev, position: text }))
-                }
-                placeholder="Enter position"
-                className="bg-gray-100 p-4 rounded-lg mb-4 text-black"
-              />
+              <Text className="text-black font-medium mb-2">User Role</Text>
+              <View className="flex-row mb-4 gap-4">
+                {["Sales", "Inventory"].map((role) => (
+                  <TouchableOpacity
+                    key={role}
+                    onPress={() =>
+                      setEditingEmployee((prev) => ({ ...prev, userRole: role }))
+                    }
+                    className="flex-row items-center gap-2"
+                  >
+                    <View
+                      className={`w-4 h-4 rounded-full border ${
+                        editingEmployee?.userRole === role
+                          ? "bg-[#3C80B4]"
+                          : "border-gray-400"
+                      }`}
+                    />
+                    <Text className="text-black">{role}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
               <View className="flex-row justify-end gap-4">
                 <TouchableOpacity
