@@ -1,48 +1,67 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
+import {
+    getMostSoldItemsForDay,
+    getMostSoldItemsForWeek,
+    getMostSoldItemsForMonth
+} from '@api/sales';
+import { useSession } from '@context/auth';
 
 export default function SalesSummary({ activeTab }) {
     const [loading, setLoading] = useState(true);
     const [products, setProducts] = useState([]);
 
-    const items = ["555 Tuna", "Nescafe 3-in-1", "Lucky Me Instant Noodles", "Pantene Shampoo", "Minola Cooking Oil", "NFA Rice", "Surf Laundry Detergent", "Martha's Salt", "Mega Sardines", "Century Tuna"];
+    const { session, businessId } = useSession();
+    const userId = session ? JSON.parse(session)?.user?.id : null;
 
-    // Dummy data
-    const dailyData = Array.from({ length: 10 }, (_, i) => ({
-        id: (i + 1).toString(),
-        name: items[i],
-        price: (i + 1) * 15 + 30,  // Starting price around PHP 30, increases gradually
-        quantity: 5 + i * 2,  // Quantities starting at 5, increasing by 2
-        total: ((i + 1) * 15 + 30) * (5 + i * 2),
-    }));
-
-    const weeklyData = Array.from({ length: 5 }, (_, i) => ({
-        id: (i + 1).toString(),
-        name: items[i],
-        price: (i + 1) * 15 + 30,  // Starting price around PHP 30, increases gradually
-        quantity: 10 + i * 3,  // Quantities starting at 10, increasing by 3
-        total: ((i + 1) * 25 + 100) * (10 + i * 3),
-    }));
-
-    const monthlyData = Array.from({ length: 8 }, (_, i) => ({
-        id: (i + 1).toString(),
-        name: items[i],
-        price: (i + 1) * 15 + 30,  // Starting price around PHP 30, increases gradually
-        quantity: 20 + i * 4,  // Quantities starting at 20, increasing by 4
-        total: ((i + 1) * 50 + 250) * (20 + i * 4),
-    }));
-
-
-    const totalOverall = products.reduce((sum, product) => sum + product.total, 0);
+    const totalOverall = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
 
     useEffect(() => {
-        setLoading(true);
-        let data = activeTab === 'Daily' ? dailyData : activeTab === 'Weekly' ? weeklyData : monthlyData;
-        setTimeout(() => {
-            setProducts(data);
+        const fetchData = async () => {
+            setLoading(true);
+
+            try {
+                if (activeTab === 'Daily') {
+                    const today = new Date().toISOString().split('T')[0];
+                    const response = await getMostSoldItemsForDay(userId, businessId, today);
+                    handleResponse(response);
+                } else if (activeTab === 'Weekly') {
+                    const currentDate = new Date();
+                    const currentWeekNumber = Math.ceil(currentDate.getDate() / 7); // rough weekly split
+                    const response = await getMostSoldItemsForWeek(userId, businessId, currentWeekNumber);
+                    handleResponse(response);
+                } else if (activeTab === 'Monthly') {
+                    const response = await getMostSoldItemsForMonth(userId, businessId);
+                    handleResponse(response);
+                } else {
+                    setProducts([]);
+                }
+            } catch (err) {
+                console.error("Error fetching sales summary:", err);
+                setProducts([]);
+            }
+
             setLoading(false);
-        }, 1000);
-    }, [activeTab]);
+        };
+
+        const handleResponse = (response) => {
+            if (response.success) {
+                const transformedProducts = response.data.map(item => ({
+                    id: item.product_id,
+                    name: item.product_name,
+                    price: parseFloat(item.product_price),
+                    quantity: parseInt(item.total_quantity),
+                    total: parseFloat(item.product_price) * parseInt(item.total_quantity),
+                }));
+                setProducts(transformedProducts);
+            } else {
+                console.error("Error fetching sales data:", response.error);
+                setProducts([]);
+            }
+        };
+
+        fetchData();
+    }, [activeTab, userId, businessId]);
 
     if (loading) {
         return (
@@ -54,7 +73,9 @@ export default function SalesSummary({ activeTab }) {
 
     return (
         <View className="flex-1 p-4 bg-gray-100 rounded-lg">
-            <Text className="text-2xl font-bold text-[#3C80B4] mb-4">Most Sold Items ({activeTab})</Text>
+            <Text className="text-2xl font-bold text-[#3C80B4] mb-4">
+                Most Sold Items ({activeTab})
+            </Text>
 
             <View className="w-full border border-gray-300 rounded-lg overflow-hidden">
                 {/* Table Header */}
@@ -67,18 +88,21 @@ export default function SalesSummary({ activeTab }) {
 
                 {/* Table Rows */}
                 {products.map((item, index) => (
-                    <View key={item.id} className={`flex-row flex-wrap items-center p-2 ${index % 2 === 0 ? 'bg-blue-200' : 'bg-blue-100'}`}>
+                    <View
+                        key={item.id}
+                        className={`flex-row flex-wrap items-center p-2 ${index % 2 === 0 ? 'bg-blue-200' : 'bg-blue-100'}`}
+                    >
                         <Text className="flex-1 text-black text-center">{item.name}</Text>
-                        <Text className="w-20 text-black text-center">Php {item.price}</Text>
+                        <Text className="w-20 text-black text-center">{item.price.toFixed(2)}</Text>
                         <Text className="w-20 text-black text-center">{item.quantity}</Text>
-                        <Text className="w-20 text-black text-center">Php {item.total}</Text>
+                        <Text className="w-20 text-black text-center">{(item.price * item.quantity).toFixed(2)}</Text>
                     </View>
                 ))}
 
                 {/* Total Row */}
                 <View className="flex-row bg-white p-2">
                     <Text className="flex-1 font-bold text-black text-right">Total</Text>
-                    <Text className="w-20 font-bold text-black text-center">{totalOverall}</Text>
+                    <Text className="w-20 font-bold text-black text-center">{totalOverall.toFixed(2)}</Text>
                 </View>
             </View>
         </View>

@@ -2,11 +2,11 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "@context/authContext";
+import { useSession } from "@context/auth"; // <- Use this instead of useAuth
 
 export default function Header() {
   const navigation = useNavigation(); // Get navigation object
-  const { userRole } = useAuth(); // Get user role from global context
+  const { userRole } = useSession(); // Get user role from global context
 
   return (
     <View className="bg-[#3C80B4] pb-5 relative overflow-hidden">
@@ -23,8 +23,8 @@ export default function Header() {
         {/* App Name */}
         <Text className="text-white text-[32px] font-bold">EasyPOS</Text>
 
-        {/* Conditionally render Settings Icon if user role is not 'employee' */}
-        {userRole !== "employee" && (
+        {/* Conditionally render Settings Icon if user role is not 'sales' */}
+        {userRole !== "sales" && (
           <TouchableOpacity onPress={() => navigation.navigate("settings")}>
             <Feather name="settings" size={34} color="white" />
           </TouchableOpacity>

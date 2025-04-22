@@ -1,11 +1,11 @@
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "@ui/header";
 import InventoryItem from "@inventory/inventoryItem";
 import BarcodeScanner from "./barcodeScanner";
-import { getProducts } from "@api/inventory";
+import { getProducts, deleteProduct } from "@api/inventory";
 import { useSession } from "@context/auth";
 
 const Inventory = () => {
@@ -45,7 +45,6 @@ const Inventory = () => {
         searchQuery
       );
 
-
       if (!success) {
         console.error("Error fetching products:", error);
         return;
@@ -63,9 +62,36 @@ const Inventory = () => {
     }, [parsedSession, businessId, selectedFilter, isAscending, searchQuery])
   );
 
-  const handleDelete = async (id) => {
-    // You can implement this with Supabase if you want to actually delete it remotely
-    console.warn("Delete feature is not implemented for Supabase data.");
+  const handleDelete = async (productId) => {
+    if (!parsedSession?.user?.id || !businessId) return;
+
+    // Confirm before deleting
+    Alert.alert(
+      "Delete Product",
+      "Are you sure you want to delete this product?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            const { success, error } = await deleteProduct(
+              parsedSession.user.id,
+              productId,
+              businessId
+            );
+
+            if (success) {
+              // Refresh the product list after deletion
+              loadProducts();
+              Alert.alert("Success", "Product deleted successfully.");
+            } else {
+              Alert.alert("Error", error || "Failed to delete product.");
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleFilter = (filter) => {
@@ -110,8 +136,8 @@ const Inventory = () => {
                   <Text className="text-gray-700">Name</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className={`p-2 ${selectedFilter === "date" ? "bg-blue-100" : ""}`}
-                  onPress={() => handleFilter("date")}
+                  className={`p-2 ${selectedFilter === "created_at" ? "bg-blue-100" : ""}`}
+                  onPress={() => handleFilter("created_at")}
                 >
                   <Text className="text-gray-700">Date</Text>
                 </TouchableOpacity>
@@ -133,14 +159,12 @@ const Inventory = () => {
         <FlatList
           data={data}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item, index  }) => <InventoryItem item={item} onDelete={handleDelete}  index={index + 1}/>}
+          renderItem={({ item, index }) => <InventoryItem item={item} onDelete={handleDelete} index={index + 1} />}
           contentContainerStyle={{ paddingBottom: 100 }}
-        />   
-
+        />
 
         {/* Barcode Scanner Button */}
-        {userRole !== 'sales' && <BarcodeScanner userId={parsedSession?.user?.id}
-    businessId={businessId}/>}
+        {userRole !== 'sales' && <BarcodeScanner userId={parsedSession?.user?.id} businessId={businessId} />}
       </View>
     </View>
   );
