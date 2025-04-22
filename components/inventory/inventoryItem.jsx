@@ -1,13 +1,29 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router"; 
 
 const InventoryItem = ({ item, onDelete, index }) => {
   const [menuVisible, setMenuVisible] = useState(false);
+  const router = useRouter();
+
+  const goToDetails = () => {
+    router.push({
+      pathname: "/main/inventory/[id]",
+      params: {
+        id: item.id,
+        name: item.name,
+        barCode: item.bar_code,
+        price: item.price,
+        stockLeft: item.quantity,
+        imageUrl: item.image_file,
+      },
+    });
+  };
 
   return (
     <TouchableWithoutFeedback onPress={() => setMenuVisible(false)}>
-      <View className="flex-row items-start border border-gray-200 p-4 my-2 rounded-lg bg-white relative">
+      <TouchableOpacity onPress={goToDetails} className="flex-row items-start border border-gray-200 p-4 my-2 rounded-lg bg-white relative">
         <Text className="text-lg font-bold text-gray-700 p-5">{index}.</Text>
 
         <View className="flex-1 ml-4">
@@ -83,7 +99,7 @@ const InventoryItem = ({ item, onDelete, index }) => {
             </TouchableOpacity>
           </View>
         )}
-      </View>
+      </TouchableOpacity>
     </TouchableWithoutFeedback>
   );
 };
