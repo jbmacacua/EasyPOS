@@ -45,6 +45,9 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
     const { daysInMonth, totalWeeks, day, currentWeek, month } = getDaysAndWeeks();
     const [selectedFilter, setSelectedFilter] = useState(1);
 
+    const dailySalesData = [923, 1187, 1023, 1578, 2124, 1389, 954, 1097, 1932]; // Simulated sales data with exact numbers
+    const dailyCostOfGoods = [500, 720, 600, 900, 1100, 750, 480, 570, 1050]; // Estimated cost of goods for daily sales
+    const dailyIncomeData = dailySalesData.map((sales, i) => sales - dailyCostOfGoods[i]);
     useEffect(() => {
         if (activeTab === "Daily") {
             setSelectedFilter(day);
@@ -56,14 +59,15 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
     }, [activeTab, day, currentWeek, month]);
 
     const getFilteredData = () => {
+        let data = [];
         if (activeTab === "Daily") {
-            return dailyData;
+            data = dailyData;
         } else if (activeTab === "Weekly" && weeklyData?.length > 0) {
-            return weeklyData.map((item) => item.daily_profit);
+            data = weeklyData.map((item) => item.daily_profit);
         } else if (activeTab === "Monthly" && monthlyData?.length > 0) {
-            return monthlyData.map((item) => item.daily_profit);
+            data = monthlyData.map((item) => item.daily_profit);
         }
-        return [0];
+        return data.length > 0 ? data : [0];
     };
 
     const getDayOfWeek = (date) => {
