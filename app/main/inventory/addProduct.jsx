@@ -6,34 +6,39 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { uploadProductImage, addProduct } from '@api/inventory';
 import { useSession } from '@context/auth';
-import ProductDetails from './[id]'; 
+import ProductDetails from './[id]';
+import { ActivityIndicator } from 'react-native';
 
 export default function AddProduct() {
     const router = useRouter();
     const { session, businessId } = useSession();
-    const { barcode } = useLocalSearchParams();  
+    const { barcode } = useLocalSearchParams();
     const [image, setImage] = useState(null);
-    const [imageBase64, setImageBase64] = useState(null); 
+    const [imageBase64, setImageBase64] = useState(null);
     const [productName, setProductName] = useState('');
     const [price, setPrice] = useState('');
     const [stockLeft, setStockLeft] = useState('');
     const [isSaved, setIsSaved] = useState(false);
     const [imageUrl, setImageUrl] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     const userId = session ? JSON.parse(session)?.user?.id : null;
 
     useEffect(() => {
         if (barcode) {
-          setProductName('');
-          setPrice('');
-          setStockLeft('');
-          setImageUrl(null); 
+            setProductName('');
+            setPrice('');
+            setStockLeft('');
+            setImageUrl(null);
+            setIsSaved(false);
+            setImage(null);
+            setImageBase64(null);
         }
-      }, [barcode]);
+    }, [barcode]);
 
     const pickImage = async () => {
         console.log("Opening image picker...");
-    
+
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -41,9 +46,9 @@ export default function AddProduct() {
             quality: 1,
             base64: true,
         });
-    
+
         console.log("Image Picker result:", result);
-    
+
         if (result?.assets?.length > 0) {
             const asset = result.assets[0];
             setImage(asset.uri);
@@ -59,10 +64,11 @@ export default function AddProduct() {
             return;
         }
 
+        setLoading(true);
         try {
             const { success: productAdded, productId, error: productError } = await addProduct(
                 userId,
-                barcode,  
+                barcode,
                 businessId,
                 productName,
                 parseFloat(price),
@@ -81,7 +87,7 @@ export default function AddProduct() {
                     { base64: imageBase64, type: 'image/jpeg' },
                     userId,
                     businessId,
-                    productId  
+                    productId
                 );
                 console.log("🧪 uploadProductImage result:", { success, url, error });
 
@@ -90,8 +96,11 @@ export default function AddProduct() {
             }
 
             setIsSaved(true);
+            router.push('/main/inventory');
         } catch (error) {
             console.error('Error saving product:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -164,13 +173,21 @@ export default function AddProduct() {
                         <TextInput
                             className="bg-gray-100 p-4 rounded-lg mb-4"
                             placeholder="Scanned Barcode"
-                            value={barcode}  
-                            editable={false} 
+                            value={barcode}
+                            editable={false}
                         />
 
                         <View className="mt-auto">
-                            <TouchableOpacity className="bg-[#007DA5] py-3 rounded-2xl" onPress={saveProduct}>
-                                <Text className="text-white text-center font-semibold text-lg">Save</Text>
+                            <TouchableOpacity
+                                className="bg-[#007DA5] py-3 rounded-2xl"
+                                onPress={saveProduct}
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <Text className="text-white text-center font-semibold text-lg">Saving...</Text>
+                                ) : (
+                                    <Text className="text-white text-center font-semibold text-lg">Save</Text>
+                                )}
                             </TouchableOpacity>
                         </View>
                     </>
