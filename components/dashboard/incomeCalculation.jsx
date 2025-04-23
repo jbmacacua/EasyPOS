@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { View, Text, Dimensions } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import ModalSelector from "react-native-modal-selector";
-import Icon from "react-native-vector-icons/MaterialIcons"; // Importing MaterialIcons from react-native-vector-icons
-
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { getProfitForDay, getProfitForWeek, getProfitForMonth } from "@api/sales";
 // Helper function to calculate the number of days, weeks, and months
 const getDaysAndWeeks = () => {
     const now = new Date();
@@ -21,12 +21,15 @@ const getDaysAndWeeks = () => {
     return { daysInMonth, totalWeeks, day, currentWeek, month };
 };
 
-export default function SalesCalculation({ activeTab }) {
+export default function incomeCalculation({ activeTab, userId, businessId }) {
     const screenWidth = Dimensions.get("window").width;
+    const [loading, setLoading] = useState(true);
+    const [totalIncome, setTotalIncome] = useState(0);
+
     const { daysInMonth, totalWeeks, day, currentWeek, month } = getDaysAndWeeks();
     const [selectedFilter, setSelectedFilter] = useState(1); // Default to the first filter option
 
-    const dailySalesData = [823, 1187, 1023, 1578, 2124, 1389, 954, 1097, 1932]; // Simulated sales data with exact numbers
+    const dailySalesData = [923, 1187, 1023, 1578, 2124, 1389, 954, 1097, 1932]; // Simulated sales data with exact numbers
     const dailyCostOfGoods = [500, 720, 600, 900, 1100, 750, 480, 570, 1050]; // Estimated cost of goods for daily sales
     const dailyIncomeData = dailySalesData.map((sales, i) => sales - dailyCostOfGoods[i]); // Income calculation for daily sales
 
@@ -65,11 +68,34 @@ export default function SalesCalculation({ activeTab }) {
         return data.length > 0 ? data : [0];
     };
 
-    // Calculate total sales for the filtered data
-    const calculateTotal = () => {
-        const data = getFilteredData();
-        return data.reduce((total, value) => total + value, 0);
+useEffect(() => {
+    const fetchProfit = async () => {
+        setLoading(true);
+        try {
+            if (activeTab === "Daily") {
+                const today = new Date();
+                const formattedDate = today.toISOString().split("T")[0];
+                const { success, total } = await getProfitForDay(userId, businessId, formattedDate);
+                if (success) setTotalIncome(total);
+            } else if (activeTab === "Weekly") {
+                const { success, result } = await getProfitForWeek(userId, businessId, Number(selectedFilter));
+                if (success) setTotalIncome(result.profit || 0);
+            } else if (activeTab === "Monthly") {
+                const { success, result } = await getProfitForMonth(userId, businessId);
+                if (success) setTotalIncome(result.profit || 0);
+            }
+        } catch (err) {
+            console.error("Failed to fetch profit:", err);
+            setTotalIncome(0);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    if (userId && businessId) {
+        fetchProfit();
+    }
+}, [activeTab, selectedFilter, userId, businessId]);
 
     // Generate filter options for daily/weekly tabs
     const generateFilterOptions = () => {
@@ -106,7 +132,7 @@ export default function SalesCalculation({ activeTab }) {
                 <View className="w-1/2">
                     <Text className="text-[15px] font-bold text-[#3C80B4]">Income Calculation</Text>
                     <Text className="text-[13px] text-[#3C80B4]">
-                        Total Income: P{calculateTotal()}
+                        Total Income: P{totalIncome}
                     </Text>
                 </View>
 
