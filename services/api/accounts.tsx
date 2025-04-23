@@ -237,7 +237,7 @@ export async function createUserAccount(
         throw new Error("User already exist, choose a different firstName or lastName")
     }
 
-    const defaultPassword = `EmployeePOS-${firstName.toLowerCase()}${lastName.toLowerCase()}`;
+    const defaultPassword = `employee-${firstName.toLowerCase()}${lastName.toLowerCase()}`;
     const employeeEmail = `${firstName.toLowerCase()}${lastName.toLowerCase()}@easyPOS.com`;
 
     const { data, error: signInError } = await supabase.auth.signUp({email: employeeEmail, password: defaultPassword});
@@ -294,6 +294,7 @@ export async function updateEmployeeDetails(
       }
 
       const hasPermission = await checkOwnership(userId, businessId);
+
       if (!hasPermission) {
           throw new Error("Only owners can edit employee details.");
       }
@@ -433,6 +434,7 @@ export async function getAllEmployees(
       address: string;
       email: string;
       role: string;
+      profile_image: string;
     };
 
     type MappedEmployee = {
@@ -443,6 +445,7 @@ export async function getAllEmployees(
       address: string;
       email: string;
       role: string;
+      profileImage: string;
     };
 
     const result: MappedEmployee[] = data.map((user: BusinessEmployee) => ({
@@ -453,6 +456,7 @@ export async function getAllEmployees(
       address: user.address,
       email: user.email,
       role: user.role,
+      profileImage: user.profile_image
     }));
 
     return { success: true, result };

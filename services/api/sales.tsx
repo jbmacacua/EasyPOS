@@ -306,6 +306,7 @@ export async function getMostSoldItemsForDay(
 
         const { data, error } = await supabase
             .rpc("get_most_sold_items_for_day", {
+
                 p_business_id: businessId,  
                 p_date: date
             });

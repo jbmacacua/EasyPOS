@@ -81,4 +81,5 @@ export default function RestockItems() {
       </View>
     </View>
   );
+
 }

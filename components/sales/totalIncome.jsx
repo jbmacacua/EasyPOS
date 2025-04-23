@@ -1,68 +1,106 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
-import { LineChart } from 'react-native-chart-kit'; // LineChart import
-import { Dimensions } from 'react-native'; // For responsive width
-import Icon from "react-native-vector-icons/MaterialIcons"; // Importing MaterialIcons from react-native-vector-icons
+import { View, Text, ActivityIndicator, Dimensions } from 'react-native';
+import { LineChart } from 'react-native-chart-kit';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { getProfitForDay, getProfitForWeek, getProfitForMonth } from '@api/sales';
+import { useSession } from '@context/auth';
 
 export default function TotalIncome({ activeTab }) {
     const [loading, setLoading] = useState(true);
     const [totalIncome, setTotalIncome] = useState(0);
     const [yesterdayIncome, setYesterdayIncome] = useState(0);
+    const screenWidth = Dimensions.get('window').width;
 
-    const screenWidth = Dimensions.get("window").width;
+    const { session, businessId } = useSession();
+    const userId = session ? JSON.parse(session)?.user?.id : null;
 
-    // Function to generate random values with some fluctuation
     const getRandomFluctuation = (baseValue) => {
-        const fluctuation = Math.random() * 30 - 15; // Fluctuate by -15 to +15
-        return Math.max(0, baseValue + fluctuation); // Ensure no negative values
+        const fluctuation = Math.random() * 30 - 15;
+        return Math.max(0, baseValue + fluctuation);
     };
 
-    // Dummy data for each period with adjusted values ensuring weekly > daily and monthly > weekly (at least 4x)
     const dailyData = Array.from({ length: 10 }, (_, i) => ({
         id: (i + 1).toString(),
         name: `Daily Product ${String.fromCharCode(65 + i)}`,
-        sold: getRandomFluctuation(50 + i * 5), // Fluctuating values
+        sold: getRandomFluctuation(50 + i * 5),
     }));
 
     const weeklyData = Array.from({ length: 5 }, (_, i) => ({
         id: (i + 1).toString(),
         name: `Weekly Product ${String.fromCharCode(75 - i)}`,
-        sold: getRandomFluctuation((50 + i * 5) * 5), // Ensuring at least 4x daily sales
+        sold: getRandomFluctuation((50 + i * 5) * 5),
     }));
 
     const monthlyData = Array.from({ length: 8 }, (_, i) => ({
         id: (i + 1).toString(),
         name: `Monthly Product ${String.fromCharCode(85 + i)}`,
-        sold: getRandomFluctuation((50 + i * 5) * 20), // Ensuring at least 4x weekly sales
+        sold: getRandomFluctuation((50 + i * 5) * 20),
     }));
 
     useEffect(() => {
-        setLoading(true);
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                if (activeTab === 'Daily') {
+                    const today = new Date();
+                    const yesterday = new Date(today);
+                    yesterday.setDate(today.getDate() - 1);
 
-        let data = [];
-        if (activeTab === 'Daily') {
-            data = dailyData;
-        } else if (activeTab === 'Weekly') {
-            data = weeklyData;
-        } else if (activeTab === 'Monthly') {
-            data = monthlyData;
-        }
+                    const formatDate = (date) => date.toISOString().split('T')[0];
 
-        // Calculate total income based on the data
-        const total = data.reduce((sum, product) => sum + product.sold * 10, 0); // Assuming $10 per product
-        setTotalIncome(total.toFixed(2));
+                    const [todayRes, yesterdayRes] = await Promise.all([
+                        getProfitForDay(userId, businessId, formatDate(today)),
+                        getProfitForDay(userId, businessId, formatDate(yesterday)),
+                    ]);
 
-        // Simulate yesterday's income as 10% less than today's (just for example)
-        const yesterdayTotal = total * 0.9;
-        setYesterdayIncome(yesterdayTotal.toFixed(2));
+                    if (todayRes.success && yesterdayRes.success) {
+                        setTotalIncome(todayRes.total.toFixed(2));
+                        setYesterdayIncome(yesterdayRes.total.toFixed(2));
+                    } else {
+                        throw todayRes.error || yesterdayRes.error;
+                    }
 
-        setTimeout(() => {
+                } else if (activeTab === 'Weekly') {
+                    const today = new Date();
+                    const weekNumber = Math.ceil(today.getDate() / 7); // Approximation
+                    const weekRes = await getProfitForWeek(userId, businessId, weekNumber);
+
+                    if (weekRes.success) {
+                        const total = weekRes.result.profit || 0;
+                        const yesterday = weekRes.result.dailyProfit?.[6] || total * 0.9;
+                        setTotalIncome(total.toFixed(2));
+                        setYesterdayIncome(0); // Set to 0 for now
+                    } else {
+                        throw weekRes.error;
+                    }
+
+                } else if (activeTab === 'Monthly') {
+                    const monthRes = await getProfitForMonth(userId, businessId);
+
+                    if (monthRes.success) {
+                        const total = monthRes.result.profit || 0;
+                        const yesterday = monthRes.result.dailyProfit?.at(-1) || total * 0.9;
+                        setTotalIncome(total.toFixed(2));
+                        setYesterdayIncome(0); // Set to 0 for now
+                    } else {
+                        throw monthRes.error;
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching income:', err);
+                setTotalIncome(0);
+                setYesterdayIncome(0);
+            }
             setLoading(false);
-        }, 1000); // Simulate network delay
+        };
+
+        fetchData();
     }, [activeTab]);
 
-    // Calculate percentage change
-    const percentageChange = ((totalIncome - yesterdayIncome) / yesterdayIncome) * 100;
+    const percentageChange =
+        yesterdayIncome !== 0
+            ? ((totalIncome - yesterdayIncome) / yesterdayIncome) * 100
+            : 0;
 
     if (loading) {
         return (
@@ -72,65 +110,78 @@ export default function TotalIncome({ activeTab }) {
         );
     }
 
+    const chartData =
+        activeTab === 'Daily'
+            ? dailyData.map((item) => item.sold)
+            : activeTab === 'Weekly'
+            ? weeklyData.map((item) => item.sold)
+            : monthlyData.map((item) => item.sold);
+
     return (
         <View className="flex-1">
             <View className="p-5 bg-white rounded-lg shadow-lg border border-[#A6A6A6]">
-                {/* Total Income and Percentage Change */}
                 <View className="flex-row justify-between">
                     <View className="w-[70%]">
                         <Text className="text-2xl font-bold mb-5 text-[#3C80B4]">Total Income</Text>
-                        <Text className="text-3xl font-bold text-[#3C80B4] pb-1">Php {Number(totalIncome).toLocaleString()}</Text>
-                        <Text className="text-sm text-gray-500">Php {Number(yesterdayIncome).toLocaleString()} previously</Text>
+                        <Text className="text-3xl font-bold text-[#3C80B4] pb-1">
+                            Php {Number(totalIncome).toLocaleString()}
+                        </Text>
+                        <Text className="text-sm text-gray-500">
+                            Php {Number(yesterdayIncome).toLocaleString()} previously
+                        </Text>
                     </View>
                     <View className="items-end w-[30%] p-1">
                         <View className="flex-row items-center bg-[#DCFCE7] rounded-xl">
-                            <Icon name={percentageChange >= 0 ? 'arrow-upward' : 'arrow-downward'} className="pr-1" size={20} color={percentageChange >= 0 ? '#1C547E' : 'red'} />
-                            <Text className={`text-base font-bold ${percentageChange >= 0 ? 'text-[#1C547E]' : 'text-red-500'}`}>
+                            <Icon
+                                name={percentageChange >= 0 ? 'arrow-upward' : 'arrow-downward'}
+                                size={20}
+                                color={percentageChange >= 0 ? '#1C547E' : 'red'}
+                            />
+                            <Text
+                                className={`text-base font-bold ${percentageChange >= 0 ? 'text-[#1C547E]' : 'text-red-500'}`}
+                            >
                                 {percentageChange.toFixed(2)}%
                             </Text>
                         </View>
-                        {/* Line Graph */}
+
                         <View className="items-center">
                             <LineChart
                                 data={{
-                                    labels: ["1hr", "5hrs", "10hrs", "15hrs", "20hrs", "25hrs"], // Placeholder labels for a week
-                                    datasets: [{
-                                        data: activeTab === 'Daily'
-                                            ? dailyData.map((item) => item.sold)
-                                            : activeTab === 'Weekly'
-                                                ? weeklyData.map((item) => item.sold)
-                                                : monthlyData.map((item) => item.sold),
-                                        color: (opacity = 100) => `rgb(0, 125, 165)`, // Line color
-                                        strokeWidth: 3,
-                                    }]
+                                    labels: ['1hr', '5hrs', '10hrs', '15hrs', '20hrs', '25hrs'],
+                                    datasets: [
+                                        {
+                                            data: chartData,
+                                            color: () => `rgb(0, 125, 165)`,
+                                            strokeWidth: 3,
+                                        },
+                                    ],
                                 }}
-                                width={screenWidth * 0.4} // Responsive width
-                                height={80} // Fixed height
-                                withHorizontalLabels={false} // Hide horizontal labels
-                                withVerticalLabels={false} // Hide vertical labels
-                                withShadow={false} // No shadow
-                                withHorizontalLines={false} // Hide horizontal lines
-                                withVerticalLines={false} // Hide vertical lines
-                                withDots={false} // Hide dots
-                                bezier // Smooth line
+                                width={screenWidth * 0.4}
+                                height={80}
+                                withHorizontalLabels={false}
+                                withVerticalLabels={false}
+                                withShadow={false}
+                                withHorizontalLines={false}
+                                withVerticalLines={false}
+                                withDots={false}
+                                bezier
                                 chartConfig={{
-                                    backgroundGradientFrom: "#fff",
+                                    backgroundGradientFrom: '#fff',
                                     backgroundGradientFromOpacity: 0,
-                                    backgroundGradientTo: "#fff",
+                                    backgroundGradientTo: '#fff',
                                     backgroundGradientToOpacity: 0,
                                     decimalPlaces: 2,
-                                    color: (opacity = 1) => `rgba(28, 84, 126, ${opacity})`, // Axis color
-                                    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // Label color
+                                    color: (opacity = 1) => `rgba(28, 84, 126, ${opacity})`,
+                                    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                                     style: {
                                         borderRadius: 16,
-                                        borderColor: 'transparent', // No border color
-                                    }
+                                        borderColor: 'transparent',
+                                    },
                                 }}
                             />
                         </View>
                     </View>
                 </View>
-
             </View>
         </View>
     );
