@@ -240,9 +240,21 @@ export async function getTotalSalesForDay(
             throw error;
         }
 
+        const { data: salesData, error: dataPerDayError } = await supabase
+            .from("sales")
+            .select("total_amount, time")
+            .eq("date", date)
+            .eq("business_id", businessId);
+            
+        if (dataPerDayError) {
+            throw dataPerDayError;
+        }
+
         const total = data && data[0] ? data[0].total_income : 0;
 
-        return { success: true, total };
+        console.log(total, salesData)
+
+        return { success: true, total, salesData};
 
     } catch (err) {
         return { success: false, error: err };
@@ -276,11 +288,31 @@ export async function getProfitForDay(
             throw error;
         }
 
+        const { data: salesData, error: dataPerDayError } = await supabase
+            .from("sales")
+            .select("total_amount, time, total_base_cost")
+            .eq("date", date)
+            .eq("business_id", businessId);
+            
+        if (dataPerDayError) {
+            throw dataPerDayError;
+        }
+
+        const salesWithProfit = salesData?.map((sale) => {
+            const profit = (sale.total_amount || 0) - (sale.total_base_cost || 0);
+            return {
+                time: sale.time,
+                profit
+            };
+        }) || [];
+
         // Sum both total_income and total_investment
         const total = data?.reduce((sum, row) => 
             sum + (row.total_income || 0) - (row.total_investment || 0), 0) || 0;
 
-        return { success: true, total };
+        console.log(total, salesWithProfit)
+
+        return { success: true, total, salesWithProfit};
 
     } catch (err) {
         return { success: false, error: err}

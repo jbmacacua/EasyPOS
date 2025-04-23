@@ -5,10 +5,11 @@ import Header from "@ui/header";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useSession } from "@context/auth";
 import { getUserDetails } from "@api/accounts";
+import { getTotalSalesForDay, getProfitForDay } from "@api/sales";
 
 const Profile = () => {
   const router = useRouter();
-  const { session, signOut } = useSession();
+  const { session, signOut, businessId } = useSession();
 
   const [userDetails, setUserDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(true);
@@ -27,7 +28,9 @@ const Profile = () => {
     const userId = parsedSession?.user?.id;
     if (userId) {
       setLoadingDetails(true);
-      const res = await getUserDetails(userId);
+      const res = await getUserDetails(userId,businessId,"2025-04-13");
+      await getTotalSalesForDay(userId,businessId,"2025-04-13");
+      await getProfitForDay()
       if (res.success) {
         setUserDetails(res.userDetails);
       } else {
