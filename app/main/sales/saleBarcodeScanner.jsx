@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Modal, TouchableOpacity, Pressable, ActivityIndicator, TextInput } from "react-native";
+import { View, Text, Modal, TouchableOpacity, ActivityIndicator, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CameraView, Camera } from "expo-camera";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { checkProductAvailability } from "@api/sales"; // adjust path as needed
+import { useSession } from "@context/auth"; // adjust to your session hook
 
 const SaleBarcodeScanner = () => {
     const [hasPermission, setHasPermission] = useState(null);
@@ -13,7 +14,11 @@ const SaleBarcodeScanner = () => {
     const [checking, setChecking] = useState(false);
     const [productAdded, setProductAdded] = useState(false);
     const [quantity, setQuantity] = useState(1);
+    const [addedProducts, setAddedProducts] = useState([]);
+
     const router = useRouter();
+    const { session, businessId } = useSession();
+    const userId = session ? JSON.parse(session)?.user?.id : null;
 
     useEffect(() => {
         const getCameraPermissions = async () => {
@@ -23,66 +28,57 @@ const SaleBarcodeScanner = () => {
         getCameraPermissions();
     }, []);
 
-    const handleDoneClick = () => {
-        router.push('/main/sales/addedProducts');
-    };
+    const handleBarcodeScanned = async ({ type, data }) => {
+        setScanned(true);
+        setChecking(true);
 
-    const products = [
-        {
-            name: "Strawberry Pancake",
-            description: "Delicious and fluffy pancake topped with strawberries",
-            price: 29,
-        },
-        {
-            name: "Chocolate Muffin",
-            description: "Rich and moist muffin with chunks of chocolate",
-            price: 25,
-        },
-        {
-            name: "Vanilla Donut",
-            description: "Soft and sweet vanilla-flavored donut with sprinkles",
-            price: 20,
-        },
-        {
-            name: "Blueberry Cheesecake",
-            description: "Creamy cheesecake with fresh blueberries on top",
-            price: 50,
-        },
-        {
-            name: "Caramel Latte",
-            description: "Smooth espresso with caramel syrup and steamed milk",
-            price: 45,
-        },
-    ];
-
-    const getRandomProduct = () => {
-        return products[Math.floor(Math.random() * products.length)];
-    };
-
-    const saveScannedBarcode = async (barcode) => {
         try {
-            const storedBarcodes = await AsyncStorage.getItem("scannedBarcodes");
-            let barcodes = storedBarcodes ? JSON.parse(storedBarcodes) : [];
+            const response = await checkProductAvailability(
+                userId,
+                data,
+                businessId,
+                quantity
+            );
 
-            if (!barcodes.some((item) => item.barcode === barcode)) {
-                const newBarcode = { barcode, scannedAt: new Date().toLocaleString() };
-                barcodes.push(newBarcode);
-
-                await AsyncStorage.setItem("scannedBarcodes", JSON.stringify(barcodes));
-                console.log(" Barcode saved:", newBarcode);
+            if (response.success && response.data.length > 0) {
+                const product = response.data[0];
+                setBarcodeData({
+                    type,
+                    data,
+                    name: product.name,
+                    description: product.description,
+                    price: product.price,
+                    productId: product.id,
+                });
+            } else {
+                alert("Product not found or insufficient stock.");
             }
         } catch (error) {
-            console.error("Error saving barcode:", error);
+            console.error("Error checking product:", error);
+        } finally {
+            setChecking(false);
         }
     };
 
-    const handleBarcodeScanned = ({ type, data }) => {
-        setScanned(true);
-        const randomProduct = getRandomProduct();
-        setBarcodeData({ type, data, ...randomProduct });
-        saveScannedBarcode(data);
-    };
+    const addProduct = () => {
+        if (!barcodeData?.productId) return;
 
+        const newProduct = {
+            productName: barcodeData.name,
+            productId: barcodeData.productId,
+            quantity: quantity,
+            price: barcodeData.price,
+        };
+
+        setAddedProducts([...addedProducts, newProduct]);
+        setProductAdded(true);
+        setBarcodeData(null);
+        setScanned(false);
+
+        setTimeout(() => setProductAdded(false), 2000);
+        console.log("Added product:", newProduct);
+        setQuantity(1); // Reset quantity after adding product
+    };
 
     const openScanner = () => {
         setScanned(false);
@@ -90,36 +86,22 @@ const SaleBarcodeScanner = () => {
         setScannerVisible(true);
     };
 
-    const addProduct = async () => {
-        setProductAdded(true);
-        setBarcodeData(null);
-        setScanned(false);
-
-        const newProduct = {
-            name: barcodeData.name,
-            description: barcodeData.description,
-            price: barcodeData.price,
-            quantity: quantity,
-        };
-
-        try {
-            const storedProducts = await AsyncStorage.getItem("addedProducts");
-            const products = storedProducts ? JSON.parse(storedProducts) : [];
-
-            products.push(newProduct);
-
-            await AsyncStorage.setItem("addedProducts", JSON.stringify(products));
-
-            console.log("Product added:", newProduct);
-        } catch (error) {
-            console.error("Error adding product:", error);
+    const handleDoneClick = () => {
+        if (addedProducts.length === 0) {
+            alert("No products added.");
+            return;
         }
+        
+        setAddedProducts([]); // Clear added products after navigation    
+        console.log("Navigating with items:", addedProducts);
 
-        setTimeout(() => {
-            setProductAdded(false);
-        }, 2000);
+        router.push({
+            pathname: "/main/sales/addedProducts",
+            params: {
+                items: JSON.stringify(addedProducts),
+            },
+        });
     };
-
 
     const incrementQuantity = () => setQuantity(quantity + 1);
     const decrementQuantity = () => setQuantity(quantity > 1 ? quantity - 1 : 1);
@@ -146,42 +128,27 @@ const SaleBarcodeScanner = () => {
                         barcodeScannerSettings={{ barcodeTypes: ["qr", "ean13", "upc_a"] }}
                         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
                     />
+
                     {barcodeData && (
                         <View style={{
-                            position: "absolute",
-                            bottom: "10%",
-                            left: "5%",
-                            right: "5%",
-                            backgroundColor: "rgba(255, 255, 255, 0.9)",
-                            padding: 20,
-                            borderRadius: 10,
-                            shadowColor: "#000",
-                            shadowOpacity: 0.1,
-                            shadowRadius: 10,
+                            position: "absolute", bottom: "10%", left: "5%", right: "5%",
+                            backgroundColor: "rgba(255, 255, 255, 0.9)", padding: 20,
+                            borderRadius: 10, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10,
                         }}>
-                            <Text style={{ color: "black", fontSize: 18, textAlign: "center" }}>
-                                Scanned Barcode: {barcodeData.data}
-                            </Text>
-                            <Text style={{ color: "black", fontSize: 20, fontWeight: "bold", textAlign: "center" }}>
-                                {barcodeData.name}
-                            </Text>
-                            <Text style={{ color: "black", fontSize: 14, textAlign: "center" }}>
-                                {barcodeData.description}
-                            </Text>
-                            <Text style={{ color: "black", fontSize: 18, textAlign: "center", marginVertical: 10 }}>
-                                Php: {barcodeData.price}
-                            </Text>
+                            <Text style={{ color: "black", fontSize: 18, textAlign: "center" }}>Scanned Barcode: {barcodeData.data}</Text>
+                            <Text style={{ color: "black", fontSize: 20, fontWeight: "bold", textAlign: "center" }}>{barcodeData.name}</Text>
+                            <Text style={{ color: "black", fontSize: 14, textAlign: "center" }}>{barcodeData.description}</Text>
+                            <Text style={{ color: "black", fontSize: 18, textAlign: "center", marginVertical: 10 }}>Php: {barcodeData.price}</Text>
 
                             <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginVertical: 10 }}>
                                 <TouchableOpacity onPress={decrementQuantity} style={{ padding: 10, backgroundColor: "#3C80B4", borderRadius: 5, marginRight: 10 }}>
                                     <Text style={{ color: "white", fontSize: 20 }}>-</Text>
                                 </TouchableOpacity>
                                 <TextInput
-                                    style={{}}
                                     value={String(quantity)}
                                     keyboardType="numeric"
                                     onChangeText={handleQuantityChange}
-                                    className="text-center text-lg border border-[#ddd] rounded-lg mx-3"
+                                    style={{ textAlign: "center", fontSize: 18, borderWidth: 1, borderColor: "#ddd", padding: 5, borderRadius: 5, width: 60 }}
                                 />
                                 <TouchableOpacity onPress={incrementQuantity} style={{ padding: 10, backgroundColor: "#3C80B4", borderRadius: 5, marginLeft: 10 }}>
                                     <Text style={{ color: "white", fontSize: 20 }}>+</Text>
@@ -191,9 +158,7 @@ const SaleBarcodeScanner = () => {
                             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                                 <TouchableOpacity
                                     style={{ padding: 10, backgroundColor: "#f44336", borderRadius: 5, flex: 1, marginRight: 10 }}
-                                    onPress={() => {
-                                        setBarcodeData(null);
-                                    }}
+                                    onPress={() => setBarcodeData(null)}
                                 >
                                     <Text style={{ color: "white", fontSize: 16, textAlign: "center" }}>Cancel</Text>
                                 </TouchableOpacity>
@@ -206,43 +171,37 @@ const SaleBarcodeScanner = () => {
                             </View>
                         </View>
                     )}
+
                     <TouchableOpacity
                         style={{
-                            position: "absolute",
-                            top: 10,
-                            right: 20,
-                            backgroundColor: "#333",
-                            padding: 10,
-                            borderRadius: 50,
+                            position: "absolute", top: 10, right: 20,
+                            backgroundColor: "#333", padding: 10, borderRadius: 50,
                         }}
                         onPress={() => setScannerVisible(false)}
                     >
                         <Ionicons name="close" size={32} color="white" />
                     </TouchableOpacity>
                 </View>
+
                 <TouchableOpacity
                     style={{
-                        position: "absolute",
-                        bottom: 20,
-                        right: 20,
-                        backgroundColor: "#007DA5",
-                        padding: 12,
-                        borderRadius: 8,
-                        flexDirection: "row",
-                        alignItems: "center",
+                        position: "absolute", bottom: 20, right: 20,
+                        backgroundColor: "#007DA5", padding: 12, borderRadius: 8,
+                        flexDirection: "row", alignItems: "center",
                     }}
                     onPress={handleDoneClick}
                 >
                     <Ionicons name="checkmark-circle" size={24} color="white" />
                     <Text style={{ color: "white", fontSize: 16, marginLeft: 5 }}>Done</Text>
                 </TouchableOpacity>
-
             </Modal>
 
             <TouchableOpacity
                 style={{
-                    backgroundColor: "#007DA5", padding: 16, borderRadius: 50, position: "absolute", bottom: 20, right: 20,
-                    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5
+                    backgroundColor: "#007DA5", padding: 16, borderRadius: 50,
+                    position: "absolute", bottom: 20, right: 20,
+                    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25, shadowRadius: 4, elevation: 5,
                 }}
                 onPress={openScanner}
             >
@@ -251,8 +210,8 @@ const SaleBarcodeScanner = () => {
 
             {productAdded && (
                 <View style={{
-                    position: "absolute", bottom: 80, backgroundColor: "green", padding: 10, borderRadius: 5,
-                    justifyContent: "center", alignItems: "center"
+                    position: "absolute", bottom: 80, backgroundColor: "green", padding: 10,
+                    borderRadius: 5, justifyContent: "center", alignItems: "center"
                 }}>
                     <Text style={{ color: "white", fontSize: 16 }}>Product Added</Text>
                 </View>

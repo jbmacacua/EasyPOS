@@ -1,118 +1,115 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Swipeable } from 'react-native-gesture-handler'; // Import Swipeable
+import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { createSales } from '@api/sales';
+import { useSession } from '@context/auth';
 
 const AddedProductComponent = () => {
-    const [addedProducts, setAddedProducts] = useState([]); 
-     const router = useRouter();
+    const [addedProducts, setAddedProducts] = useState([]);
+    const { session, businessId } = useSession();
+    const router = useRouter();
+    const userId = session ? JSON.parse(session)?.user?.id : null;
 
+    const { items } = useLocalSearchParams();
 
     useEffect(() => {
         const loadProducts = async () => {
             try {
-                // Retrieve products from AsyncStorage
-                const storedProducts = await AsyncStorage.getItem("addedProducts");
-                if (storedProducts) {
-                    setAddedProducts(JSON.parse(storedProducts)); // Set the state to the stored products
+                let parsed = [];
+                if (items) {
+                    parsed = JSON.parse(items);
+                } else {
+                    const storedProducts = await AsyncStorage.getItem("addedProducts");
+                    if (storedProducts) {
+                        parsed = JSON.parse(storedProducts);
+                    }
                 }
+                setAddedProducts(parsed);
+                await AsyncStorage.setItem("addedProducts", JSON.stringify(parsed)); // Optional cache
             } catch (error) {
                 console.error("Error loading products:", error);
             }
         };
 
         loadProducts();
-    }, []);
+    }, [items]);
 
     const updateQuantity = (index, change) => {
-        const updatedProducts = [...addedProducts];
-        updatedProducts[index].quantity = Math.max(0, updatedProducts[index].quantity + change); // Prevent negative quantity
-        setAddedProducts(updatedProducts);
-
-        // Save updated products back to AsyncStorage
-        AsyncStorage.setItem("addedProducts", JSON.stringify(updatedProducts));
+        const updated = [...addedProducts];
+        updated[index].quantity = Math.max(0, updated[index].quantity + change);
+        setAddedProducts(updated);
+        AsyncStorage.setItem("addedProducts", JSON.stringify(updated));
     };
 
     const handleDelete = (index) => {
-        const updatedProducts = addedProducts.filter((_, i) => i !== index); // Remove the product at the given index
-        setAddedProducts(updatedProducts);
-
-        // Save updated products back to AsyncStorage
-        AsyncStorage.setItem("addedProducts", JSON.stringify(updatedProducts));
-    };
-
-    const handleConfirm = () => {
-        // Handle the confirmation logic (e.g., finalizing the order, etc.)
-        router.push('/main/sales');
+        const updated = addedProducts.filter((_, i) => i !== index);
+        setAddedProducts(updated);
+        AsyncStorage.setItem("addedProducts", JSON.stringify(updated));
     };
 
     const handleCancel = async () => {
         try {
-            // Clear the AsyncStorage data
             await AsyncStorage.removeItem("addedProducts");
-            
-            // Update state to empty array
             setAddedProducts([]);
-            
-            console.log("All products removed");
+            router.push('/main/sales');
         } catch (error) {
             console.error("Error clearing added products:", error);
         }
     };
-    
 
-    // Calculate total price and quantity
-    const totalPrice = addedProducts.reduce((total, product) => total + product.price * product.quantity, 0);
-    const totalQuantity = addedProducts.reduce((total, product) => total + product.quantity, 0);
+    const handleConfirm = async () => {
+        if (!userId || !businessId) {
+            alert("User is not logged in or business ID is missing.");
+            return;
+        }
 
-    // Swipeable delete action
-    const renderRightActions = (index) => {
-        return (
-            <TouchableOpacity
-                onPress={() => handleDelete(index)}
-                style={{
-                    backgroundColor: 'red',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderRadius: 8,
-                    padding: 8,
-                    marginBottom: 16,
-                }}
-            >
-                <Ionicons name="trash" size={24} color="white" />
-            </TouchableOpacity>
-        );
+        const saleItems = addedProducts.map(p => ({
+            productId: p.productId,
+            quantity: p.quantity,
+            price: p.price,
+        }));
+
+        const response = await createSales(userId, businessId, saleItems);
+
+        if (response.success) {
+            await AsyncStorage.removeItem("addedProducts");
+            alert("Sale completed successfully!");
+            router.push('/main/sales');
+        } else {
+            alert("Error creating sale: " + (response.error || "Unknown error"));
+        }
     };
+
+    const totalPrice = addedProducts.reduce((sum, p) => sum + p.price * p.quantity, 0);
+    const totalQuantity = addedProducts.reduce((sum, p) => sum + p.quantity, 0);
+
+    const renderRightActions = (index) => (
+        <TouchableOpacity
+            onPress={() => handleDelete(index)}
+            style={{ backgroundColor: 'red', justifyContent: 'center', alignItems: 'center', borderRadius: 8, padding: 8, marginBottom: 16 }}
+        >
+            <Ionicons name="trash" size={24} color="white" />
+        </TouchableOpacity>
+    );
 
     return (
         <View className="p-5">
             <Text className="text-[#3C80B4] text-[20px] font-bold text-center pb-5">Added Products</Text>
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 20 }}
-                style={{ height: '70%' }}
-                // Ensure scroll and swipeable gestures work together
-                keyboardShouldPersistTaps="handled"
-            >
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }} style={{ height: '70%' }} keyboardShouldPersistTaps="handled">
                 {addedProducts.length === 0 ? (
                     <Text>No products added yet</Text>
                 ) : (
                     addedProducts.map((product, index) => (
-                        <Swipeable
-                            key={index}
-                            renderRightActions={() => renderRightActions(index)}
-                            shouldCancelWhenOutside={true} // Ensure swipe is canceled when outside the product
-                        >
+                        <Swipeable key={index} renderRightActions={() => renderRightActions(index)} shouldCancelWhenOutside={true}>
                             <View className="border border-gray-300 rounded-lg p-4 mb-4 flex-row items-center">
                                 <Text className="text-xl font-bold mr-4">{index + 1}</Text>
-
                                 <View className="flex-1">
-                                    <Text className="text-lg font-bold">{product.name}</Text>
+                                    <Text className="text-lg font-bold">{product.productName}</Text>
                                     <Text className="text-base text-blue-500">Price: Php {product.price}</Text>
                                 </View>
-
                                 <View className="flex-row items-center">
                                     <TouchableOpacity onPress={() => updateQuantity(index, -1)} className="bg-gray-200 p-2 rounded-md mx-2">
                                         <Text className="text-lg font-bold">-</Text>
@@ -127,7 +124,7 @@ const AddedProductComponent = () => {
                     ))
                 )}
             </ScrollView>
-            {/* Display Total Price and Total Quantity */}
+
             <View className="flex-row justify-between w-full mt-5 border-t border-b border-gray-300">
                 <View className="flex-col w-[40%] items-center">
                     <Text className="text-xl font-semibold">Total</Text>
@@ -139,7 +136,6 @@ const AddedProductComponent = () => {
                 </View>
             </View>
 
-            {/* Cancel and Confirm Buttons */}
             <View className="flex-row justify-between w-full mt-6">
                 <TouchableOpacity onPress={handleCancel} className="bg-red-500 p-4 rounded-full flex-1 mr-2">
                     <Text className="text-white font-bold text-center">Cancel</Text>
