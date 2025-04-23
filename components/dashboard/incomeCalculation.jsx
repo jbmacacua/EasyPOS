@@ -20,19 +20,6 @@ const getDaysAndWeeks = () => {
     return { daysInMonth, totalWeeks, day, currentWeek, month };
 };
 
-const generateRandomPoints = (total, count = 6) => {
-    const points = Array(count).fill(0);
-    let remaining = total;
-
-    for (let i = 0; i < count - 1; i++) {
-        const value = Math.floor(Math.random() * (remaining / 2));
-        points[i] = value;
-        remaining -= value;
-    }
-    points[count - 1] = remaining;
-
-    return points.sort(() => Math.random() - 0.5); 
-};
 
 export default function incomeCalculation({ activeTab, userId, businessId }) {
     const screenWidth = Dimensions.get("window").width;
@@ -47,10 +34,6 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
     const [weeklyData, setWeeklyData] = useState([]);
     const [monthlyData, setMonthlyData] = useState([]);
 
-    const dailySalesData = [923, 1187, 1023, 1578, 2124, 1389, 954, 1097, 1932];
-    const dailyCostOfGoods = [500, 720, 600, 900, 1100, 750, 480, 570, 1050];
-    const dailyIncomeData = dailySalesData.map((sales, i) => sales - dailyCostOfGoods[i]);
-
     // Update selectedFilter when activeTab changes
     useEffect(() => {
         const newFilter =
@@ -58,23 +41,25 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
         setSelectedFilter(newFilter);
     }, [activeTab, day, currentWeek, month]);
 
+
     useEffect(() => {
         const fetchProfit = async () => {
             setLoading(true);
             try {
                 if (activeTab === "Daily") {
                     const date = new Date();
-                    date.setDate(Number(selectedFilter));
+                    date.setDate(Number(selectedFilter) || date.getDate());
+                    date.setHours(12, 0, 0, 0); 
                     const formattedDate = date.toISOString().split("T")[0];
-                    console.log("Fetching daily profit for:", formattedDate);
 
-                    const { success, total } = await getProfitForDay(userId, businessId, formattedDate);
+                    const { success, total, profitByInterval  } = await getProfitForDay(userId, businessId, formattedDate);
                     if (success) {
                         setTotalIncome(total);
-                        setDailyData(generateRandomPoints(total)); 
+                        setDailyData(profitByInterval);
                     }
                 } else if (activeTab === "Weekly") {
-                    const { success, result } = await getProfitForWeek(userId, businessId, Number(selectedFilter));
+                    const weekToFetch = selectedFilter || currentWeek;
+                    const { success, result } = await getProfitForWeek(userId, businessId, weekToFetch);
                     if (success) {
                         setTotalIncome(result.profit || 0);
                         setWeeklyData(result.dailyProfit);
@@ -97,12 +82,12 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
         if (userId && businessId && selectedFilter) {
             fetchProfit();
         }
-    }, [activeTab, selectedFilter, userId, businessId]);
+    }, [activeTab, selectedFilter, userId, businessId, currentWeek]);
 
     const getFilteredData = () => {
         let data = [];
         if (activeTab === "Daily") {
-            data = dailyData;
+            data =  dailyData.map((item) => item.total);
         } else if (activeTab === "Weekly" && weeklyData?.length > 0) {
             data = weeklyData.map((item) => item.daily_profit);
         } else if (activeTab === "Monthly" && monthlyData?.length > 0) {
@@ -133,7 +118,7 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
 
     const generateChartLabels = () => {
         if (activeTab === "Daily") {
-            return ["1hr", "5hrs", "10hrs", "15hrs", "20hrs", "25hrs"];
+            return dailyData.map((item) => item.interval);
         } else if (activeTab === "Weekly") {
             return weeklyData?.length > 0
                 ? weeklyData.map((item) => getDayOfWeek(item.date))
