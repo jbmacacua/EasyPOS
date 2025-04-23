@@ -35,11 +35,11 @@ export default function Dashboard() {
 
         <ScrollView contentContainerStyle={{ padding: 8 }}>
           <View className="mb-3 w-[95%] mx-auto">
-            <SalesCalculation activeTab={activeTab} />
+            <SalesCalculation activeTab={activeTab} userId={userId} businessId={businessId}  />
           </View>
 
           <View className="mb-3 w-[95%] mx-auto">
-            <IncomeCalculation activeTab={activeTab} />
+            <IncomeCalculation activeTab={activeTab} userId={userId} businessId={businessId}/>
           </View>
 
           <View className="mb-3 w-[95%] mx-auto">
