@@ -17,6 +17,14 @@ async function supabaseDate(): Promise<string | null> {
     }
 }
 
+function normalizeTime(date: string, time: string): Date {
+    // Trim microseconds to milliseconds and ensure proper timezone format
+    const cleanedTime = time
+        .replace(/(\.\d{3})\d+/, '$1') // keep only 3 decimal places for milliseconds
+        .replace(/([+-]\d{2})(?!:)/, '$1:00'); // convert +08 to +08:00
+
+    return new Date(`${date}T${cleanedTime}`);
+}
 
 function getStartDateOfWeek(year: number, month: number, weekNumber: number): string {
     const startDate = new Date(year, month, (weekNumber - 1) * 7 + 1); // First day of the week
@@ -250,9 +258,30 @@ export async function getTotalSalesForDay(
             throw dataPerDayError;
         }
 
+        const salesBy4Hr: { [key: string]: number } = {};
+
+        salesData?.forEach(({ total_amount, time }) => {
+            const saleTime = normalizeTime(date, time);
+            const hour = saleTime.getHours();
+            const groupStart = Math.floor(hour / 4) * 4;
+            const groupEnd = (groupStart + 4) % 24;
+            const intervalKey = `${String(groupStart).padStart(2, '0')}:00 - ${String(groupEnd).padStart(2, '0')}:00`;
+
+            if (!salesBy4Hr[intervalKey]) {
+                salesBy4Hr[intervalKey] = 0;
+            }
+
+            salesBy4Hr[intervalKey] += total_amount;
+        });
+
+        const salesByInterval = Object.entries(salesBy4Hr)
+            .map(([interval, total]) => ({ interval, total }))
+            .sort((a, b) => parseInt(a.interval.split(":")[0]) - parseInt(b.interval.split(":")[0]));
+        
+
         const total = data && data[0] ? data[0].total_income : 0;
 
-        return { success: true, total, salesData};
+        return { success: true, total, salesByInterval};
 
     } catch (err) {
         return { success: false, error: err };
@@ -304,11 +333,32 @@ export async function getProfitForDay(
             };
         }) || [];
 
+        // Group profit by 4-hour intervals
+        const profitBy4Hr: { [key: string]: number } = {};
+
+        salesWithProfit.forEach(({ time, profit }) => {
+            const saleTime = normalizeTime(date, time);
+            const hour = saleTime.getHours();
+            const groupStart = Math.floor(hour / 4) * 4;
+            const groupEnd = (groupStart + 4) % 24;
+            const intervalKey = `${String(groupStart).padStart(2, '0')}:00 - ${String(groupEnd).padStart(2, '0')}:00`;
+
+            if (!profitBy4Hr[intervalKey]) {
+                profitBy4Hr[intervalKey] = 0;
+            }
+
+            profitBy4Hr[intervalKey] += profit;
+        });
+
+        const profitByInterval = Object.entries(profitBy4Hr)
+            .map(([interval, total]) => ({ interval, total }))
+            .sort((a, b) => parseInt(a.interval.split(":")[0]) - parseInt(b.interval.split(":")[0]));
+
         // Sum both total_income and total_investment
         const total = data?.reduce((sum, row) => 
             sum + (row.total_income || 0) - (row.total_investment || 0), 0) || 0;
 
-        return { success: true, total, salesWithProfit};
+        return { success: true, total, profitByInterval};
 
     } catch (err) {
         return { success: false, error: err}
