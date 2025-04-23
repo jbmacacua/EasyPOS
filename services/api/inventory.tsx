@@ -300,7 +300,7 @@ export async function addProduct(
       throw fetchError ;  
     }
 
-    return { success: true, newProductData};
+    return { success: true, productId: newProductData.id };
   } catch (err) {
     return { success: false, error: err };
   }
