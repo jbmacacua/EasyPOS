@@ -36,44 +36,27 @@ const generateRandomPoints = (total, count = 6) => {
 
 export default function incomeCalculation({ activeTab, userId, businessId }) {
     const screenWidth = Dimensions.get("window").width;
+    const { daysInMonth, totalWeeks, day, currentWeek, month } = getDaysAndWeeks();
+
+    const initialFilter = activeTab === "Daily" ? day : activeTab === "Weekly" ? currentWeek : month + 1;
+    const [selectedFilter, setSelectedFilter] = useState(initialFilter);
+
     const [loading, setLoading] = useState(true);
     const [totalIncome, setTotalIncome] = useState(0);
     const [dailyData, setDailyData] = useState([]);
     const [weeklyData, setWeeklyData] = useState([]);
     const [monthlyData, setMonthlyData] = useState([]);
 
-    const { daysInMonth, totalWeeks, day, currentWeek, month } = getDaysAndWeeks();
-    const [selectedFilter, setSelectedFilter] = useState(1);
-
-    const dailySalesData = [923, 1187, 1023, 1578, 2124, 1389, 954, 1097, 1932]; // Simulated sales data with exact numbers
-    const dailyCostOfGoods = [500, 720, 600, 900, 1100, 750, 480, 570, 1050]; // Estimated cost of goods for daily sales
+    const dailySalesData = [923, 1187, 1023, 1578, 2124, 1389, 954, 1097, 1932];
+    const dailyCostOfGoods = [500, 720, 600, 900, 1100, 750, 480, 570, 1050];
     const dailyIncomeData = dailySalesData.map((sales, i) => sales - dailyCostOfGoods[i]);
+
+    // Update selectedFilter when activeTab changes
     useEffect(() => {
-        if (activeTab === "Daily") {
-            setSelectedFilter(day);
-        } else if (activeTab === "Weekly") {
-            setSelectedFilter(currentWeek);
-        } else if (activeTab === "Monthly") {
-            setSelectedFilter(month + 1);
-        }
+        const newFilter =
+            activeTab === "Daily" ? day : activeTab === "Weekly" ? currentWeek : month + 1;
+        setSelectedFilter(newFilter);
     }, [activeTab, day, currentWeek, month]);
-
-    const getFilteredData = () => {
-        let data = [];
-        if (activeTab === "Daily") {
-            data = dailyData;
-        } else if (activeTab === "Weekly" && weeklyData?.length > 0) {
-            data = weeklyData.map((item) => item.daily_profit);
-        } else if (activeTab === "Monthly" && monthlyData?.length > 0) {
-            data = monthlyData.map((item) => item.daily_profit);
-        }
-        return data.length > 0 ? data : [0];
-    };
-
-    const getDayOfWeek = (date) => {
-        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        return days[new Date(date).getDay()];
-    };
 
     useEffect(() => {
         const fetchProfit = async () => {
@@ -88,7 +71,7 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
                     const { success, total } = await getProfitForDay(userId, businessId, formattedDate);
                     if (success) {
                         setTotalIncome(total);
-                        setDailyData(generateRandomPoints(total)); // Generate random points summing to total
+                        setDailyData(generateRandomPoints(total)); 
                     }
                 } else if (activeTab === "Weekly") {
                     const { success, result } = await getProfitForWeek(userId, businessId, Number(selectedFilter));
@@ -111,10 +94,27 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
             }
         };
 
-        if (userId && businessId) {
+        if (userId && businessId && selectedFilter) {
             fetchProfit();
         }
     }, [activeTab, selectedFilter, userId, businessId]);
+
+    const getFilteredData = () => {
+        let data = [];
+        if (activeTab === "Daily") {
+            data = dailyData;
+        } else if (activeTab === "Weekly" && weeklyData?.length > 0) {
+            data = weeklyData.map((item) => item.daily_profit);
+        } else if (activeTab === "Monthly" && monthlyData?.length > 0) {
+            data = monthlyData.map((item) => item.daily_profit);
+        }
+        return data.length > 0 ? data : [0];
+    };
+
+    const getDayOfWeek = (date) => {
+        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        return days[new Date(date).getDay()];
+    };
 
     const generateFilterOptions = () => {
         if (activeTab === "Daily") {
@@ -150,7 +150,7 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
                 <View className="w-1/2">
                     <Text className="text-[15px] font-bold text-[#3C80B4]">Income Calculation</Text>
                     <Text className="text-[13px] text-[#3C80B4]">
-                    Total Income: P{totalIncome.toFixed(2)}
+                        Total Income: P{totalIncome.toFixed(2)}
                     </Text>
                 </View>
 
@@ -158,7 +158,9 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
                     <View>
                         <ModalSelector
                             data={generateFilterOptions()}
-                            initValue={activeTab === "Daily" ? `Day ${selectedFilter}` : `Week ${selectedFilter}`}
+                            initValue={
+                                activeTab === "Daily" ? `Day ${selectedFilter}` : `Week ${selectedFilter}`
+                            }
                             onChange={(option) => setSelectedFilter(option.key)}
                             style={{
                                 width: 100,
