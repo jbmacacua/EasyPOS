@@ -4,6 +4,7 @@ import { LineChart } from "react-native-chart-kit";
 import ModalSelector from "react-native-modal-selector";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { getProfitForDay, getProfitForWeek, getProfitForMonth } from "@api/sales";
+
 // Helper function to calculate the number of days, weeks, and months
 const getDaysAndWeeks = () => {
     const now = new Date();
@@ -25,6 +26,8 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
     const screenWidth = Dimensions.get("window").width;
     const [loading, setLoading] = useState(true);
     const [totalIncome, setTotalIncome] = useState(0);
+    const [weeklyData, setWeeklyData] = useState([]);
+    const [monthlyData, setMonthlyData] = useState([]);
 
     const { daysInMonth, totalWeeks, day, currentWeek, month } = getDaysAndWeeks();
     const [selectedFilter, setSelectedFilter] = useState(1); // Default to the first filter option
@@ -32,10 +35,6 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
     const dailySalesData = [923, 1187, 1023, 1578, 2124, 1389, 954, 1097, 1932]; // Simulated sales data with exact numbers
     const dailyCostOfGoods = [500, 720, 600, 900, 1100, 750, 480, 570, 1050]; // Estimated cost of goods for daily sales
     const dailyIncomeData = dailySalesData.map((sales, i) => sales - dailyCostOfGoods[i]); // Income calculation for daily sales
-
-    const weeklySalesData = [9023, 11478, 8475, 10456, 9812, 10189, 10987]; // More precise weekly sales figures
-    const weeklyCostOfGoods = [5000, 6200, 4800, 5500, 5300, 5400, 5900]; // Estimated cost of goods for weekly sales
-    const weeklyIncomeData = weeklySalesData.map((sales, i) => sales - weeklyCostOfGoods[i]); // Income calculation for weekly sales
 
     const monthlySalesData = [28145, 39123, 33267, 41289]; // Realistic monthly sales variations with exact figures
     const monthlyCostOfGoods = [15000, 21000, 18000, 22000]; // Estimated cost of goods for monthly sales
@@ -58,44 +57,58 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
 
         if (activeTab === "Daily") {
             data = dailyIncomeData;
-        } else if (activeTab === "Weekly") {
-            data = weeklyIncomeData;
-        } else if (activeTab === "Monthly") {
-            data = monthlyIncomeData;
+        } else if (activeTab === "Weekly" && weeklyData?.length > 0) {
+            data = weeklyData.map((item) => item.daily_profit);
+        } else if (activeTab === "Monthly" && monthlyData?.length > 0) {
+            data = monthlyData.map((item) => item.daily_profit);
         }
 
         // If no data, return [0] to prevent errors
         return data.length > 0 ? data : [0];
     };
 
-useEffect(() => {
-    const fetchProfit = async () => {
-        setLoading(true);
-        try {
-            if (activeTab === "Daily") {
-                const today = new Date();
-                const formattedDate = today.toISOString().split("T")[0];
-                const { success, total } = await getProfitForDay(userId, businessId, formattedDate);
-                if (success) setTotalIncome(total);
-            } else if (activeTab === "Weekly") {
-                const { success, result } = await getProfitForWeek(userId, businessId, Number(selectedFilter));
-                if (success) setTotalIncome(result.profit || 0);
-            } else if (activeTab === "Monthly") {
-                const { success, result } = await getProfitForMonth(userId, businessId);
-                if (success) setTotalIncome(result.profit || 0);
-            }
-        } catch (err) {
-            console.error("Failed to fetch profit:", err);
-            setTotalIncome(0);
-        } finally {
-            setLoading(false);
-        }
+    // Function to convert date to day of the week (e.g., "Mon", "Tue")
+    const getDayOfWeek = (date) => {
+        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const d = new Date(date);
+        return days[d.getDay()]; // Returns the day of the week (Sun, Mon, etc.)
     };
 
-    if (userId && businessId) {
-        fetchProfit();
-    }
-}, [activeTab, selectedFilter, userId, businessId]);
+    useEffect(() => {
+        const fetchProfit = async () => {
+            setLoading(true);
+            try {
+                if (activeTab === "Daily") {
+                    const today = new Date();
+                    const formattedDate = today.toISOString().split("T")[0];
+                    const { success, total } = await getProfitForDay(userId, businessId, formattedDate);
+                    if (success) setTotalIncome(total);
+                } else if (activeTab === "Weekly") {
+                    const { success, result } = await getProfitForWeek(userId, businessId, Number(selectedFilter));
+                    console.log("Weekly profit result:", result);
+                    if (success) {
+                        setTotalIncome(result.profit || 0);
+                        setWeeklyData(result.dailyProfit); 
+                    }
+                } else if (activeTab === "Monthly") {
+                    const { success, result } = await getProfitForMonth(userId, businessId,  Number(selectedFilter));
+                    console.log("Monthly profit result:", result);
+                    if (success) 
+                        setTotalIncome(result.profit || 0);
+                    setMonthlyData(result.weeklyProfit); 
+                }
+            } catch (err) {
+                console.error("Failed to fetch profit:", err);
+                setTotalIncome(0);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (userId && businessId) {
+            fetchProfit();
+        }
+    }, [activeTab, selectedFilter, userId, businessId]);
 
     // Generate filter options for daily/weekly tabs
     const generateFilterOptions = () => {
@@ -118,6 +131,9 @@ useEffect(() => {
         if (activeTab === "Daily") {
             return ["1hr", "5hrs", "10hrs", "15hrs", "20hrs", "25hrs"];
         } else if (activeTab === "Weekly") {
+            if (weeklyData?.length > 0) {
+                return weeklyData.map((item) => getDayOfWeek(item.date)); // Day names dynamically
+            }
             return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
         } else if (activeTab === "Monthly") {
             return ["Week 1", "Week 2", "Week 3", "Week 4"];
@@ -186,36 +202,25 @@ useEffect(() => {
                         datasets: [
                             {
                                 data: getFilteredData(),
-                                strokeWidth: 2,
                             },
                         ],
                     }}
-                    width={screenWidth * 0.8}
-                    height={200}
-                    yAxisLabel="P"
-                    yAxisInterval={1}
-                    segments={8}
-                    fromZero={true}
+                    width={screenWidth - 30}
+                    height={220}
                     chartConfig={{
-                        backgroundColor: "#F5F5F5",
-                        backgroundGradientFrom: "#F5F5F5",
-                        backgroundGradientTo: "#F5F5F5",
+                        backgroundColor: "#ffffff",
+                        backgroundGradientFrom: "#ffffff",
+                        backgroundGradientTo: "#ffffff",
                         decimalPlaces: 0,
-                        color: (opacity = 1) => `rgba(28, 84, 126, ${opacity})`,
-                        labelColor: (opacity = 1) => `rgba(28, 84, 126, ${opacity})`,
+                        color: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`,
+                        labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                         style: {
                             borderRadius: 16,
                         },
-                        propsForDots: {
-                            r: "2",
-                            strokeWidth: "3",
-                            stroke: "#1C547E",
-                        },
-                        propsForVerticalLabels: {
-                            fontSize: 12,
-                        },
                     }}
+                    bezier
                     style={{
+                        marginVertical: 8,
                         borderRadius: 16,
                     }}
                 />
