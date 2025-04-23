@@ -3,11 +3,7 @@ import { View, Text, Dimensions, ActivityIndicator } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import ModalSelector from "react-native-modal-selector";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import {
-  getTotalSalesForDay,
-  getTotalSalesForWeek,
-  getTotalSalesForMonth,
-} from "@api/sales";
+import { getTotalSalesForDay, getTotalSalesForWeek, getTotalSalesForMonth } from "@api/sales";
 
 const getDaysAndWeeks = () => {
   const now = new Date();
@@ -46,11 +42,13 @@ export default function SalesCalculation({ activeTab, userId, businessId }) {
       let result;
 
       if (activeTab === "Daily") {
-        const today = new Date();
-        const formattedDate = today.toISOString().split("T")[0];
+        const now = new Date();
+        const selectedDate = new Date(now.getFullYear(), now.getMonth(), Number(selectedFilter));
+        const formattedDate = selectedDate.toLocaleDateString("en-CA");
         result = await getTotalSalesForDay(userId, businessId, formattedDate);
       } else if (activeTab === "Weekly") {
         result = await getTotalSalesForWeek(userId, businessId, parseInt(selectedFilter));
+        console.log("Weekly sales result:", result);
       } else if (activeTab === "Monthly") {
         result = await getTotalSalesForMonth(userId, businessId);
       }
