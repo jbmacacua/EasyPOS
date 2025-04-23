@@ -252,8 +252,6 @@ export async function getTotalSalesForDay(
 
         const total = data && data[0] ? data[0].total_income : 0;
 
-        console.log(total, salesData)
-
         return { success: true, total, salesData};
 
     } catch (err) {
@@ -309,8 +307,6 @@ export async function getProfitForDay(
         // Sum both total_income and total_investment
         const total = data?.reduce((sum, row) => 
             sum + (row.total_income || 0) - (row.total_investment || 0), 0) || 0;
-
-        console.log(total, salesWithProfit)
 
         return { success: true, total, salesWithProfit};
 
