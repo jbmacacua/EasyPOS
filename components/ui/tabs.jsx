@@ -15,7 +15,7 @@ const Tabs = ({ activeTab, setActiveTab }) => {
         <TouchableOpacity
           key={tab}
           style={{
-            width: tabWidth - (tabWidth * 0.3),
+            width: tabWidth - (tabWidth * 0.23),
           }}
           className={`px-5 py-2 rounded-full mx-2 shadow-md ${activeTab === tab ? "bg-[#3C80B4]" : "bg-white border border-[#1C547E]"}`}
           onPress={() => setActiveTab(tab)}
