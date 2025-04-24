@@ -209,7 +209,11 @@ const SaleBarcodeScanner = () => {
                             position: "absolute", top: 10, right: 20,
                             backgroundColor: "#333", padding: 10, borderRadius: 50,
                         }}
-                        onPress={() => setScannerVisible(false)}
+                        onPress={() => {
+                            setScannerVisible(false);
+                            setQuantity(1);
+                            setAddedProducts([]);
+                        }}
                     >
                         <Ionicons name="close" size={32} color="white" />
                     </TouchableOpacity>
