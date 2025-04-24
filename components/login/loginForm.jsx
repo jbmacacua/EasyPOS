@@ -89,7 +89,7 @@ const LoginForm = ({ email, setEmail, password, setPassword, rememberPassword, s
                     </TouchableOpacity>
                 </View>
 
-                <View className="flex-row items-center justify-between mb-6 pt-4 px-3">
+                <View className="flex-row items-center justify-between mb-6 pt-4 -ml-6">
                     <TouchableOpacity onPress={() => setRememberPassword(!rememberPassword)}>
                         <View className="flex-row items-center pr-14">
                             <View className="w-4 h-4 mr-2 border rounded-sm items-center justify-center">
