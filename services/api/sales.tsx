@@ -1,4 +1,5 @@
 import { supabase } from "@utils/supabase"; 
+import { startOfWeek, formatISO, parseISO, getDate} from "date-fns";
 
 // Helpers
 async function supabaseDate(): Promise<string | null> {
@@ -605,9 +606,27 @@ export async function getTotalSalesForMonth(
             throw error;
         }
 
+        const dailySales = data[0]?.daily_sales || [];
+
+        // 🧠 Grouping by week
+        const weeklySalesMap: Record<string, number> = {};
+
+        for (const day of dailySales) {
+        const dateObj = parseISO(day.date);
+        const dayOfMonth = getDate(dateObj);
+        const weekNumber = Math.ceil(dayOfMonth / 7);
+        const weekLabel = `Week ${weekNumber}`;
+
+        weeklySalesMap[weekLabel] = (weeklySalesMap[weekLabel] || 0) + day.total_income;}
+
+        const weeklySales = Object.entries(weeklySalesMap).map(([week, total_income]) => ({
+            week,
+            total_income,
+        }));
+
         const result = {
-            dailySales: data[0]?.daily_sales,
-            totalSales: data[0]?.total_sales
+            weeklySales,
+            totalSales: data[0]?.total_sales,
         };
 
         return { success: true, result};
@@ -660,10 +679,29 @@ export async function getProfitForMonth(
             throw error;
         }
 
+        const dailyProfit = data?.daily_profit || [];
+
+        const weeklyProfitMap: Record<string, number> = {};
+
+        for (const day of dailyProfit) {
+            console.log(day)
+            const dateObj = parseISO(day.date);
+            const dayOfMonth = getDate(dateObj);
+            const weekNumber = Math.ceil(dayOfMonth / 7);
+            const weekLabel = `Week ${weekNumber}`;
+
+            weeklyProfitMap[weekLabel] = (weeklyProfitMap[weekLabel] || 0) + day.daily_profit;
+        }
+
+        const weeklyProfit = Object.entries(weeklyProfitMap).map(([week, total_profit]) => ({
+            week,
+            total_profit,
+        }));
+
         const result = {
             profit: data?.profit,
-            dailyProfit: data?.daily_profit || null 
-        }
+            weeklyProfit,
+        };
 
         return { success: true, result };
     } catch (err) {
