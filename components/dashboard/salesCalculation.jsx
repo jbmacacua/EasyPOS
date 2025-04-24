@@ -75,7 +75,6 @@ const [selectedMonth, setSelectedMonth] = useState(month + 1);
             setChartData({ values, labels });
             setTotalSales(result.result.totalSales || 0);
           } else {
-            console.error("No sales data available for this week.", result.error);
             setChartData({ values: [], labels: [] });
             setTotalSales(0);
           }
