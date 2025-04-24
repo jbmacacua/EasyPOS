@@ -83,13 +83,17 @@ const [selectedMonth, setSelectedMonth] = useState(month + 1);
         } else if (activeTab === "Monthly") {
           const result = await getTotalSalesForMonth(userId, businessId);
           if (result.success) {
-            const breakdown = result.salesByWeek || [];
-            const values = breakdown.map((entry) => entry.total || 0);
+            // Extracting weekly sales data
+            const breakdown = result.result.weeklySales || [];
+            
+            // Mapping the weekly sales to get labels and values
+            const values = breakdown.map((entry) => entry.total_income || 0);
             const labels = breakdown.map((entry) => entry.week || "");
+        
             setChartData({ values, labels });
-            setTotalSales(result.total || 0);
+            setTotalSales(result.result.totalSales || 0);
           }
-        }
+        }        
       } catch (error) {
         console.error("Sales fetch error:", error);
         setChartData({ values: [], labels: [] });
