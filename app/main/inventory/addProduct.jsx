@@ -1,4 +1,4 @@
-import { Text, View, TextInput, TouchableOpacity, Image } from 'react-native';
+import { Text, View, TextInput, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import Header from '@ui/header';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,17 +7,18 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { uploadProductImage, addProduct } from '@api/inventory';
 import { useSession } from '@context/auth';
 import ProductDetails from './[id]';
-import { ActivityIndicator } from 'react-native';
 
 export default function AddProduct() {
     const router = useRouter();
     const { session, businessId } = useSession();
     const { barcode } = useLocalSearchParams();
+
     const [image, setImage] = useState(null);
     const [imageBase64, setImageBase64] = useState(null);
     const [productName, setProductName] = useState('');
     const [price, setPrice] = useState('');
-    const [stockLeft, setStockLeft] = useState('');
+    const [basePrice, setBasePrice] = useState('');
+    const [quantity, setQuantity] = useState('');
     const [isSaved, setIsSaved] = useState(false);
     const [imageUrl, setImageUrl] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -28,7 +29,8 @@ export default function AddProduct() {
         if (barcode) {
             setProductName('');
             setPrice('');
-            setStockLeft('');
+            setBasePrice('');
+            setQuantity('');
             setImageUrl(null);
             setIsSaved(false);
             setImage(null);
@@ -37,8 +39,6 @@ export default function AddProduct() {
     }, [barcode]);
 
     const pickImage = async () => {
-        console.log("Opening image picker...");
-
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -47,41 +47,38 @@ export default function AddProduct() {
             base64: true,
         });
 
-        console.log("Image Picker result:", result);
-
         if (result?.assets?.length > 0) {
             const asset = result.assets[0];
             setImage(asset.uri);
             setImageBase64(asset.base64);
-        } else {
-            console.log("No image selected or picker was cancelled.");
         }
     };
 
     const saveProduct = async () => {
-        if (!productName || !price || !stockLeft || !barcode || !userId || !businessId) {
-            console.log('Missing fields:', { productName, price, stockLeft, barcode, userId, businessId });
+        if (!productName || !price || !basePrice || !quantity || !barcode || !userId || !businessId) {
+            console.log('Missing fields:', { productName, price, basePrice, quantity, barcode, userId, businessId });
             return;
         }
 
         setLoading(true);
         try {
+            const parsedPrice = parseFloat(price);
+            const parsedBasePrice = parseFloat(basePrice);
+            const parsedQuantity = parseInt(quantity, 10);
+
             const { success: productAdded, productId, error: productError } = await addProduct(
                 userId,
                 barcode,
                 businessId,
                 productName,
-                parseFloat(price),
-                parseFloat(price),
-                parseInt(stockLeft, 10),
-                parseInt(stockLeft, 10)
+                parsedPrice,
+                parsedBasePrice,
+                parsedQuantity, // quantity
+                parsedQuantity  // total_quantity_since_restock
             );
-
-            console.log("Product ID from addProduct:", productId);
 
             if (!productAdded) throw new Error(productError);
 
-            // Now upload the image, using the productId as reference
             if (image && imageBase64) {
                 const { success, url, error } = await uploadProductImage(
                     { base64: imageBase64, type: 'image/jpeg' },
@@ -89,7 +86,6 @@ export default function AddProduct() {
                     businessId,
                     productId
                 );
-                console.log("🧪 uploadProductImage result:", { success, url, error });
 
                 if (!success) throw new Error(error);
                 setImageUrl(url);
@@ -104,10 +100,8 @@ export default function AddProduct() {
         }
     };
 
-    // Function to handle editing the product
     const handleEdit = () => {
         setIsSaved(false);
-        // Reset the form or make other necessary adjustments here
     };
 
     return (
@@ -123,7 +117,7 @@ export default function AddProduct() {
 
                 {isSaved ? (
                     <ProductDetails
-                        product={{ productName, barcode, price, stockLeft, imageUrl }}
+                        product={{ productName, barcode, price, quantity, basePrice, imageUrl }}
                         onEdit={handleEdit}
                     />
                 ) : (
@@ -158,15 +152,26 @@ export default function AddProduct() {
                                 />
                             </View>
                             <View className="w-[48%]">
-                                <Text className="text-lg font-semibold mb-1">Stock Left:</Text>
+                                <Text className="text-lg font-semibold mb-1">Base Price:</Text>
                                 <TextInput
                                     className="bg-gray-100 p-4 rounded-lg"
-                                    placeholder="Stock Left"
+                                    placeholder="Base Price"
                                     keyboardType="numeric"
-                                    value={stockLeft}
-                                    onChangeText={setStockLeft}
+                                    value={basePrice}
+                                    onChangeText={setBasePrice}
                                 />
                             </View>
+                        </View>
+
+                        <View className="mt-4">
+                            <Text className="text-lg font-semibold mb-1">Quantity:</Text>
+                            <TextInput
+                                className="bg-gray-100 p-4 rounded-lg"
+                                placeholder="Quantity"
+                                keyboardType="numeric"
+                                value={quantity}
+                                onChangeText={setQuantity}
+                            />
                         </View>
 
                         <Text className="text-lg font-semibold mt-4 mb-1">Scanned Barcode:</Text>
@@ -183,11 +188,9 @@ export default function AddProduct() {
                                 onPress={saveProduct}
                                 disabled={loading}
                             >
-                                {loading ? (
-                                    <Text className="text-white text-center font-semibold text-lg">Saving...</Text>
-                                ) : (
-                                    <Text className="text-white text-center font-semibold text-lg">Save</Text>
-                                )}
+                                <Text className="text-white text-center font-semibold text-lg">
+                                    {loading ? 'Saving...' : 'Save'}
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </>
