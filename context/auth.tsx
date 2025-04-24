@@ -200,7 +200,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
             setTimeout(() => {
               router.push("/");
-          }, 2000);
+          }, 3000);
 
           } catch (error) {
             Alert.alert('Logout Failed', 'An error occurred while logging out. Please try again.');

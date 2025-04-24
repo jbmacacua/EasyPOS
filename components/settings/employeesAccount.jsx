@@ -183,6 +183,11 @@ const EmployeesAccount = ({ isAddModalVisible, setAddModalVisible }) => {
         setPage(1);
         setHasMore(true);
 
+        Alert.alert(
+          "Success",
+          `Employee can now sign in with:\nEmail: ${response?.employeeCredentials?.email}\nPassword: ${response?.employeeCredentials?.password}`
+        );
+
         // Reload the list of employees
         await fetchEmployees();
       } else {
@@ -477,19 +482,19 @@ const EmployeesAccount = ({ isAddModalVisible, setAddModalVisible }) => {
               <View className="flex-row justify-end gap-4">
                 <TouchableOpacity
                   onPress={() => setEditModalVisible(false)}
-                  className="border border-gray-400 px-4 py-4 rounded-lg" // Adjusted padding here
+                  className="border border-gray-400 px-5 py-2 rounded-lg"
                 >
                   <Text className="text-gray-700 font-medium">Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleSaveEdit}
                   disabled={isSavingEdit}
-                  className={`bg-blue-500 p-4 rounded-lg ${isSavingEdit ? 'opacity-50' : ''}`}
+                  className={`bg-[#3C80B4] px-6 py-2 rounded-lg ${isSavingEdit ? 'opacity-50' : ''}`}
                 >
                   {isSavingEdit ? (
-                    <ActivityIndicator size="small" color="#fff" />
+                    <ActivityIndicator color="white" />
                   ) : (
-                    <Text className="text-white text-center font-semibold">Save</Text>
+                    <Text className="text-white font-medium">Save</Text>
                   )}
                 </TouchableOpacity>
               </View>

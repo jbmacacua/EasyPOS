@@ -226,6 +226,9 @@ export async function createUserAccount(
         throw new Error("Only owners can create new users.");
     }
 
+    const currentSession = await supabase.auth.getSession();
+    const sessionData = currentSession.data.session;
+
     const { data: userDetails, error: userDetailsError } = await supabase
         .from("user_details")
         .select("*")
@@ -270,6 +273,15 @@ export async function createUserAccount(
     const employeeCredentials = {
       email: employeeEmail,
       password: defaultPassword
+    }
+
+    if (sessionData) {
+      const { access_token, refresh_token } = sessionData;
+    
+      await supabase.auth.setSession({
+        access_token,
+        refresh_token,
+      });
     }
 
     return { success: true, employeeCredentials };
