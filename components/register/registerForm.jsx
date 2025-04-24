@@ -44,7 +44,7 @@ const RegisterForm = () => {
     };
 
     return (
-        <View className="flex-1 bg-white px-6 py-8">
+        <View className="flex-1 bg-white px-6 py-0">
 
             {/* Form Fields */}
             <View>
