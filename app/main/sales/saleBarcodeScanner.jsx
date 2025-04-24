@@ -70,14 +70,30 @@ const SaleBarcodeScanner = () => {
     const addProduct = () => {
         if (!barcodeData?.productId) return;
 
-        const newProduct = {
-            productName: barcodeData.name,
-            productId: barcodeData.productId,
-            quantity,
-            price: barcodeData.price,
-        };
+        setAddedProducts(prevProducts => {
+            const existingIndex = prevProducts.findIndex(
+                item => item.productId === barcodeData.productId
+            );
 
-        setAddedProducts([...addedProducts, newProduct]);
+            if (existingIndex !== -1) {
+                // Product already exists, update quantity
+                const updatedProducts = [...prevProducts];
+                updatedProducts[existingIndex].quantity += quantity;
+                return updatedProducts;
+            } else {
+                // Product does not exist, add new one
+                return [
+                    ...prevProducts,
+                    {
+                        productName: barcodeData.name,
+                        productId: barcodeData.productId,
+                        quantity,
+                        price: barcodeData.price,
+                    }
+                ];
+            }
+        });
+
         setProductAdded(true);
         setBarcodeData(null);
         setScanned(false);
