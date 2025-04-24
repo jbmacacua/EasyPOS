@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { getProfitForDay, getProfitForWeek, getProfitForMonth } from '@api/sales';
+import { getProfitForDay, getProfitForWeek, getProfitForMonth, getTotalSalesByEmployee } from '@api/sales';
 import { useSession } from '@context/auth';
+import { useIsFocused } from '@react-navigation/native';
 
 export default function TotalIncome({ activeTab }) {
     const [loading, setLoading] = useState(true);
@@ -11,8 +12,10 @@ export default function TotalIncome({ activeTab }) {
     const [yesterdayIncome, setYesterdayIncome] = useState(0);
     const screenWidth = Dimensions.get('window').width;
 
-    const { session, businessId } = useSession();
+    const { session, businessId, userRole } = useSession();
     const userId = session ? JSON.parse(session)?.user?.id : null;
+
+    const isFocused = useIsFocused();
 
     const getRandomFluctuation = (baseValue) => {
         const fluctuation = Math.random() * 30 - 15;
@@ -38,6 +41,8 @@ export default function TotalIncome({ activeTab }) {
     }));
 
     useEffect(() => {
+        if (!isFocused) return;
+
         const fetchData = async () => {
             setLoading(true);
             try {
@@ -45,21 +50,29 @@ export default function TotalIncome({ activeTab }) {
                     const today = new Date();
                     const yesterday = new Date(today);
                     yesterday.setDate(today.getDate() - 1);
-
                     const formatDate = (date) => date.toISOString().split('T')[0];
 
-                    const [todayRes, yesterdayRes] = await Promise.all([
-                        getProfitForDay(userId, businessId, formatDate(today)),
-                        getProfitForDay(userId, businessId, formatDate(yesterday)),
-                    ]);
-
-                    if (todayRes.success && yesterdayRes.success) {
-                        setTotalIncome(todayRes.total.toFixed(2));
-                        setYesterdayIncome(yesterdayRes.total.toFixed(2));
+                    if (userRole === 'sales') {
+                        const todayRes = await getTotalSalesByEmployee(userId, businessId);
+                        if (todayRes.success) {
+                            setTotalIncome(todayRes.total.toFixed(2));
+                            setYesterdayIncome(0); // Set to 0 for now
+                        } else {
+                            throw todayRes.error;
+                        }
                     } else {
-                        throw todayRes.error || yesterdayRes.error;
-                    }
+                        const [todayRes, yesterdayRes] = await Promise.all([
+                            getProfitForDay(userId, businessId, formatDate(today)),
+                            getProfitForDay(userId, businessId, formatDate(yesterday)),
+                        ]);
 
+                        if (todayRes.success && yesterdayRes.success) {
+                            setTotalIncome(todayRes.total.toFixed(2));
+                            setYesterdayIncome(yesterdayRes.total.toFixed(2));
+                        } else {
+                            throw todayRes.error || yesterdayRes.error;
+                        }
+                    }
                 } else if (activeTab === 'Weekly') {
                     const today = new Date();
                     const weekNumber = Math.ceil(today.getDate() / 7); // Approximation
@@ -67,19 +80,16 @@ export default function TotalIncome({ activeTab }) {
 
                     if (weekRes.success) {
                         const total = weekRes.result.profit || 0;
-                        const yesterday = weekRes.result.dailyProfit?.[6] || total * 0.9;
                         setTotalIncome(total.toFixed(2));
                         setYesterdayIncome(0); // Set to 0 for now
                     } else {
                         throw weekRes.error;
                     }
-
                 } else if (activeTab === 'Monthly') {
                     const monthRes = await getProfitForMonth(userId, businessId);
 
                     if (monthRes.success) {
                         const total = monthRes.result.profit || 0;
-                        const yesterday = monthRes.result.dailyProfit?.at(-1) || total * 0.9;
                         setTotalIncome(total.toFixed(2));
                         setYesterdayIncome(0); // Set to 0 for now
                     } else {
@@ -95,7 +105,7 @@ export default function TotalIncome({ activeTab }) {
         };
 
         fetchData();
-    }, [activeTab]);
+    }, [isFocused, activeTab]);
 
     const percentageChange =
         yesterdayIncome !== 0
