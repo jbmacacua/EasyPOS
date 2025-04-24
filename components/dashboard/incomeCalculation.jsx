@@ -91,7 +91,7 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
         } else if (activeTab === "Weekly" && weeklyData?.length > 0) {
             data = weeklyData.map((item) => item.daily_profit);
         } else if (activeTab === "Monthly" && monthlyData?.length > 0) {
-            data = monthlyData.map((item) => item.daily_profit);
+            data = monthlyData.map((item) => item.total_profit);
         }
         return data.length > 0 ? data : [0];
     };
@@ -124,7 +124,9 @@ export default function incomeCalculation({ activeTab, userId, businessId }) {
                 ? weeklyData.map((item) => getDayOfWeek(item.date))
                 : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
         } else if (activeTab === "Monthly") {
-            return ["Week 1", "Week 2", "Week 3", "Week 4"];
+            return monthlyData?.length > 0
+            ? monthlyData.map((item) => item.week) 
+            : ["Week 1", "Week 2", "Week 3", "Week 4"];
         }
         return [];
     };
