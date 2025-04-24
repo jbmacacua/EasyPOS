@@ -47,10 +47,11 @@ export default function TotalIncome({ activeTab }) {
             setLoading(true);
             try {
                 if (activeTab === 'Daily') {
+                    const formatDate = (date) => date.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+
                     const today = new Date();
                     const yesterday = new Date(today);
-                    yesterday.setDate(today.getDate() - 1);
-                    const formatDate = (date) => date.toISOString().split('T')[0];
+                    yesterday.setDate(yesterday.getDate() - 1);
 
                     if (userRole === 'sales') {
                         const todayRes = await getTotalSalesByEmployee(userId, businessId);

@@ -357,6 +357,8 @@ export async function getProfitForDay(
         const total = data?.reduce((sum, row) => 
             sum + (row.total_income || 0) - (row.total_investment || 0), 0) || 0;
 
+        console.log("results: ", total, profitByInterval)
+
         return { success: true, total, profitByInterval};
 
     } catch (err) {
@@ -387,7 +389,7 @@ export async function getMostSoldItemsForDay(
                 p_business_id: businessId,  
                 p_date: date
             });
-            
+
         if (error) {
             throw error;
         }
