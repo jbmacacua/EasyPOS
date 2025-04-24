@@ -16,10 +16,6 @@ export default function RestockItems() {
         const parsedSession = session ? JSON.parse(session) : null;
         const userId = parsedSession?.user?.id;
   
-        console.log('Parsed session:', parsedSession);
-        console.log('User ID:', userId);
-        console.log('Business ID:', businessId);
-  
         if (!userId || !businessId) {
           setErrorMsg('User or business not found.');
           setLoading(false);
@@ -28,7 +24,6 @@ export default function RestockItems() {
   
         const { success, data, error } = await getItemsNeededToRestock(userId, businessId);
   
-        console.log('API result:', { success, data, error });
   
         if (success) {
           setItems(data || []);

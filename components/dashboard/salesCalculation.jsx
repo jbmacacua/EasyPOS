@@ -23,53 +23,91 @@ export default function SalesCalculation({ activeTab, userId, businessId }) {
 
   const [selectedFilter, setSelectedFilter] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [chartData, setChartData] = useState([]);
+  const [chartData, setChartData] = useState({ values: [], labels: [] });
   const [totalSales, setTotalSales] = useState(0);
+  const [selectedDay, setSelectedDay] = useState(day);
+const [selectedWeek, setSelectedWeek] = useState(currentWeek);
+const [selectedMonth, setSelectedMonth] = useState(month + 1);
 
-  useEffect(() => {
-    if (activeTab === "Daily") {
-      setSelectedFilter(day);
-    } else if (activeTab === "Weekly") {
-      setSelectedFilter(currentWeek);
-    } else if (activeTab === "Monthly") {
-      setSelectedFilter(month + 1);
-    }
-  }, [activeTab, day, currentWeek, month]);
 
   useEffect(() => {
     const fetchSales = async () => {
       setLoading(true);
-      let result;
+      try {
+        if (activeTab === "Daily") {
+          const now = new Date();
+          const selectedDate = new Date(now.getFullYear(), now.getMonth(), Number(selectedDay));
+          const formattedDate = selectedDate.toLocaleDateString("en-CA");
+          const result = await getTotalSalesForDay(userId, businessId, formattedDate);
+  
+          if (result.success) {
+            const breakdown = result.salesByInterval || [];
+            const values = breakdown.map((entry) => entry.total || 0);
+            const labels = breakdown.map((entry) => entry.interval || "");
+            const calculatedTotal = values.reduce((sum, val) => sum + val, 0);
+            setChartData({ values, labels });
+            setTotalSales(calculatedTotal);
 
-      if (activeTab === "Daily") {
-        const now = new Date();
-        const selectedDate = new Date(now.getFullYear(), now.getMonth(), Number(selectedFilter));
-        const formattedDate = selectedDate.toLocaleDateString("en-CA");
-        result = await getTotalSalesForDay(userId, businessId, formattedDate);
-      } else if (activeTab === "Weekly") {
-        result = await getTotalSalesForWeek(userId, businessId, parseInt(selectedFilter));
-        console.log("Weekly sales result:", result);
-      } else if (activeTab === "Monthly") {
-        result = await getTotalSalesForMonth(userId, businessId);
-      }
-
-      if (result.success) {
-        const total = result.total || result.totalSales || result.result?.totalSales || 0;
-        setTotalSales(total);
-        const breakdown = result.breakdown || result.data || [];
-        const values = breakdown.map((entry) => entry.sales || entry.total || entry.amount || 0);
-        setChartData(values);
-      } else {
-        console.error("Sales fetch error:", result.error);
+            console.log("Daily sales result:", result);
+          }
+        } else if (activeTab === "Weekly") {
+          const result = await getTotalSalesForWeek(userId, businessId, parseInt(selectedWeek));
+        
+          console.log("Weekly sales result:", result);
+        
+          if (result.success && result.result?.dailySales) {
+            const breakdown = result.result.dailySales;
+        
+            const sortedBreakdown = breakdown.sort(
+              (a, b) => new Date(a.date) - new Date(b.date)
+            );
+        
+            const values = sortedBreakdown.map((entry) => entry.total_income || 0);
+            const labels = sortedBreakdown.map((entry) => {
+              const date = new Date(entry.date);
+              return date.toLocaleDateString("en-US", { weekday: "short" }); // e.g., "Mon", "Tue"
+            });
+            
+        
+            console.log("Weekly chart values:", values);
+            console.log("Weekly chart labels:", labels);
+        
+            setChartData({ values, labels });
+            setTotalSales(result.result.totalSales || 0);
+          } else {
+            console.error("No sales data available for this week.", result.error);
+            setChartData({ values: [], labels: [] });
+            setTotalSales(0);
+          }
+        
+         
+        } else if (activeTab === "Monthly") {
+          const result = await getTotalSalesForMonth(userId, businessId);
+          if (result.success) {
+            const breakdown = result.salesByWeek || [];
+            const values = breakdown.map((entry) => entry.total || 0);
+            const labels = breakdown.map((entry) => entry.week || "");
+            setChartData({ values, labels });
+            setTotalSales(result.total || 0);
+          }
+        }
+      } catch (error) {
+        console.error("Sales fetch error:", error);
+        setChartData({ values: [], labels: [] });
         setTotalSales(0);
-        setChartData([]);
       }
-
       setLoading(false);
     };
-
-    fetchSales();
-  }, [activeTab, selectedFilter]);
+  
+    if (activeTab === "Daily") {
+      fetchSales();
+    } else if (activeTab === "Weekly") {
+      fetchSales();
+    } else if (activeTab === "Monthly") {
+      fetchSales();
+    }
+  }, [activeTab, selectedDay, selectedWeek, selectedMonth]);
+  
 
   const generateFilterOptions = () => {
     if (activeTab === "Daily") {
@@ -82,17 +120,6 @@ export default function SalesCalculation({ activeTab, userId, businessId }) {
         label: `Week ${i + 1}`,
         key: `${i + 1}`,
       }));
-    }
-    return [];
-  };
-
-  const generateChartLabels = () => {
-    if (activeTab === "Daily") {
-      return ["1hr", "5hrs", "10hrs", "15hrs", "20hrs", "25hrs"];
-    } else if (activeTab === "Weekly") {
-      return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    } else if (activeTab === "Monthly") {
-      return ["Week 1", "Week 2", "Week 3", "Week 4"];
     }
     return [];
   };
@@ -116,9 +143,17 @@ export default function SalesCalculation({ activeTab, userId, businessId }) {
             <ModalSelector
               data={generateFilterOptions()}
               initValue={
-                activeTab === "Daily" ? `Day ${selectedFilter}` : `Week ${selectedFilter}`
+                activeTab === "Daily"
+                  ? `Day ${selectedDay}`
+                  : `Week ${selectedWeek}`
               }
-              onChange={(option) => setSelectedFilter(option.key)}
+              onChange={(option) => {
+                if (activeTab === "Daily") {
+                  setSelectedDay(Number(option.key));
+                } else if (activeTab === "Weekly") {
+                  setSelectedWeek(Number(option.key));
+                }
+              }}
               style={{
                 width: 100,
                 backgroundColor: "#3C80B4",
@@ -146,7 +181,7 @@ export default function SalesCalculation({ activeTab, userId, businessId }) {
             >
               <View className="flex-row justify-between items-center">
                 <Text className="text-white text-base ml-3">
-                  {activeTab === "Daily" ? `Day ${selectedFilter}` : `Week ${selectedFilter}`}
+                  {activeTab === "Daily" ? `Day ${selectedDay}` : `Week ${selectedWeek}`}
                 </Text>
                 <Icon name="arrow-drop-down" size={24} color="white" className="mr-3" />
               </View>
@@ -158,8 +193,8 @@ export default function SalesCalculation({ activeTab, userId, businessId }) {
       <View className="items-center">
         <LineChart
           data={{
-            labels: generateChartLabels(),
-            datasets: [{ data: chartData.length > 0 ? chartData : [0], strokeWidth: 2 }],
+            labels: chartData.labels.length > 0 ? chartData.labels : ["No data"],
+            datasets: [{ data: chartData.values.length > 0 ? chartData.values : [0], strokeWidth: 2 }],
           }}
           width={screenWidth * 0.8}
           height={200}
