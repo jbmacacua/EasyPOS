@@ -15,6 +15,7 @@ const Inventory = () => {
   const [data, setData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { session, userRole, businessId } = useSession();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const parsedSession = useMemo(() => {
     try {
@@ -63,35 +64,20 @@ const Inventory = () => {
   );
 
   const handleDelete = async (productId) => {
-    if (!parsedSession?.user?.id || !businessId) return;
-
-    // Confirm before deleting
-    Alert.alert(
-      "Delete Product",
-      "Are you sure you want to delete this product?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            const { success, error } = await deleteProduct(
-              parsedSession.user.id,
-              productId,
-              businessId
-            );
-
-            if (success) {
-              // Refresh the product list after deletion
-              loadProducts();
-              Alert.alert("Success", "Product deleted successfully.");
-            } else {
-              Alert.alert("Error", error || "Failed to delete product.");
-            }
-          },
-        },
-      ]
-    );
+    if (isDeleting) return; 
+    setIsDeleting(true);
+  
+    try {
+      const { success, error } = await deleteProduct(parsedSession.user.id, productId, businessId);
+      if (success) {
+        setData(prev => prev.filter(p => p.id !== productId));
+        Alert.alert("Success", "Product deleted successfully.");
+      } else {
+        Alert.alert("Error", error || "Failed to delete product.");
+      }
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleFilter = (filter) => {

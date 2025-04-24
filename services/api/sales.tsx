@@ -265,8 +265,7 @@ export async function getTotalSalesForDay(
             const saleTime = normalizeTime(date, time);
             const hour = saleTime.getHours();
             const groupStart = Math.floor(hour / 4) * 4;
-            const groupEnd = (groupStart + 4) % 24;
-            const intervalKey = `${String(groupStart).padStart(2, '0')}:00 - ${String(groupEnd).padStart(2, '0')}:00`;
+            const intervalKey = `${groupStart}hrs`;
 
             if (!salesBy4Hr[intervalKey]) {
                 salesBy4Hr[intervalKey] = 0;
@@ -341,9 +340,8 @@ export async function getProfitForDay(
             const saleTime = normalizeTime(date, time);
             const hour = saleTime.getHours();
             const groupStart = Math.floor(hour / 4) * 4;
-            const groupEnd = (groupStart + 4) % 24;
-            const intervalKey = `${String(groupStart).padStart(2, '0')}:00 - ${String(groupEnd).padStart(2, '0')}:00`;
-
+            const intervalKey = `${groupStart}hrs`;
+            
             if (!profitBy4Hr[intervalKey]) {
                 profitBy4Hr[intervalKey] = 0;
             }
@@ -451,9 +449,9 @@ export async function getTotalSalesForWeek(
             totalSales: data[0]?.total_sales
         };
 
-        console.log(result)
+        console.log('weekly sale result',result)
 
-        return { success: true, totalSales: data[0]?.total_sales || 0 };
+        return { success: true, result };
     } catch (err) {
         return { success: false, error: err };
     }
