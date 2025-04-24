@@ -53,6 +53,7 @@ const Profile = () => {
     try {
       setLogoutLoading(true);
       await signOut();
+      router.replace("/auth/login"); // Redirect to login screen
     } catch (error) {
       console.error("Error logging out:", error);
       Alert.alert('Logout Failed', 'An error occurred while logging out. Please try again.');

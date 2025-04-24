@@ -3,8 +3,9 @@ import { View, Text, Modal, TouchableOpacity, ActivityIndicator, TextInput } fro
 import { Ionicons } from "@expo/vector-icons";
 import { CameraView, Camera } from "expo-camera";
 import { useRouter } from "expo-router";
-import { checkProductAvailability } from "@api/sales"; // adjust path as needed
-import { useSession } from "@context/auth"; // adjust to your session hook
+import { checkProductAvailability } from "@api/sales";
+import { useSession } from "@context/auth";
+import { Alert } from "react-native";
 
 const SaleBarcodeScanner = () => {
     const [hasPermission, setHasPermission] = useState(null);
@@ -33,13 +34,7 @@ const SaleBarcodeScanner = () => {
         setChecking(true);
 
         try {
-            const response = await checkProductAvailability(
-                userId,
-                data,
-                businessId,
-                quantity
-            );
-
+            const response = await checkProductAvailability(userId, data, businessId, quantity);
             if (response.success && response.data.length > 0) {
                 const product = response.data[0];
                 setBarcodeData({
@@ -51,10 +46,22 @@ const SaleBarcodeScanner = () => {
                     productId: product.id,
                 });
             } else {
-                alert("Product not found or insufficient stock.");
+                Alert.alert(
+                    "Alert",
+                    "Product not found or insufficient stock.",
+                    [
+                        {
+                            text: "OK",
+                            onPress: () => setScanned(false), // Only reset scanned when OK is pressed
+                        },
+                    ],
+                    { cancelable: false }
+                );
             }
         } catch (error) {
             console.error("Error checking product:", error);
+            alert("Error checking product.");
+            setScanned(false);
         } finally {
             setChecking(false);
         }
@@ -63,37 +70,56 @@ const SaleBarcodeScanner = () => {
     const addProduct = () => {
         if (!barcodeData?.productId) return;
 
-        const newProduct = {
-            productName: barcodeData.name,
-            productId: barcodeData.productId,
-            quantity: quantity,
-            price: barcodeData.price,
-        };
+        setAddedProducts(prevProducts => {
+            const existingIndex = prevProducts.findIndex(
+                item => item.productId === barcodeData.productId
+            );
 
-        setAddedProducts([...addedProducts, newProduct]);
+            if (existingIndex !== -1) {
+                // Product already exists, update quantity
+                const updatedProducts = [...prevProducts];
+                updatedProducts[existingIndex].quantity += quantity;
+                return updatedProducts;
+            } else {
+                // Product does not exist, add new one
+                return [
+                    ...prevProducts,
+                    {
+                        productName: barcodeData.name,
+                        productId: barcodeData.productId,
+                        quantity,
+                        price: barcodeData.price,
+                    }
+                ];
+            }
+        });
+
         setProductAdded(true);
         setBarcodeData(null);
         setScanned(false);
+        setQuantity(1);
 
         setTimeout(() => setProductAdded(false), 2000);
-        console.log("Added product:", newProduct);
-        setQuantity(1); // Reset quantity after adding product
-    };
-
-    const openScanner = () => {
-        setScanned(false);
-        setBarcodeData(null);
-        setScannerVisible(true);
     };
 
     const handleDoneClick = () => {
         if (addedProducts.length === 0) {
-            alert("No products added.");
+            setScanned(true);
+            Alert.alert(
+                "Alert",
+                "No products added.",
+                [
+                    {
+                        text: "OK",
+                        onPress: () => setScanned(false), // Only reset scanned when OK is pressed
+                    },
+                ],
+                { cancelable: false }
+            );
             return;
         }
-        
-        setAddedProducts([]); // Clear added products after navigation    
-        console.log("Navigating with items:", addedProducts);
+
+        setScannerVisible(false);
 
         router.push({
             pathname: "/main/sales/addedProducts",
@@ -101,11 +127,19 @@ const SaleBarcodeScanner = () => {
                 items: JSON.stringify(addedProducts),
             },
         });
+
+        setAddedProducts([]);
+    };
+
+    const openScanner = () => {
+        setScanned(false);
+        setBarcodeData(null);
+        setQuantity(1);
+        setScannerVisible(true);
     };
 
     const incrementQuantity = () => setQuantity(quantity + 1);
     const decrementQuantity = () => setQuantity(quantity > 1 ? quantity - 1 : 1);
-
     const handleQuantityChange = (text) => {
         if (text === "" || /^[1-9]\d*$/.test(text)) {
             setQuantity(text === "" ? "" : parseInt(text));
@@ -113,7 +147,7 @@ const SaleBarcodeScanner = () => {
     };
 
     if (hasPermission === null) {
-        return <Text style={{ textAlign: "center", fontSize: 18, color: "#666" }}>Requesting for camera permission</Text>;
+        return <Text style={{ textAlign: "center", fontSize: 18, color: "#666" }}>Requesting camera permission...</Text>;
     }
     if (hasPermission === false) {
         return <Text style={{ textAlign: "center", fontSize: 18, color: "#f00" }}>No access to camera</Text>;
@@ -121,7 +155,18 @@ const SaleBarcodeScanner = () => {
 
     return (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "white" }}>
-            <Modal animationType="slide" transparent={false} visible={scannerVisible} onRequestClose={() => setScannerVisible(false)}>
+            <Modal
+                animationType="slide"
+                transparent={false}
+                visible={scannerVisible}
+                onRequestClose={() => {
+                    setScannerVisible(false);
+                    setScanned(false);
+                    setBarcodeData(null);
+                    setChecking(false);
+                    setQuantity(1);
+                }}
+            >
                 <View style={{ flex: 1, backgroundColor: "white", justifyContent: "center", alignItems: "center" }}>
                     <CameraView
                         onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
@@ -158,7 +203,10 @@ const SaleBarcodeScanner = () => {
                             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                                 <TouchableOpacity
                                     style={{ padding: 10, backgroundColor: "#f44336", borderRadius: 5, flex: 1, marginRight: 10 }}
-                                    onPress={() => setBarcodeData(null)}
+                                    onPress={() => {
+                                        setBarcodeData(null);
+                                        setScanned(false);
+                                    }}
                                 >
                                     <Text style={{ color: "white", fontSize: 16, textAlign: "center" }}>Cancel</Text>
                                 </TouchableOpacity>
@@ -177,23 +225,27 @@ const SaleBarcodeScanner = () => {
                             position: "absolute", top: 10, right: 20,
                             backgroundColor: "#333", padding: 10, borderRadius: 50,
                         }}
-                        onPress={() => setScannerVisible(false)}
+                        onPress={() => {
+                            setScannerVisible(false);
+                            setQuantity(1);
+                            setAddedProducts([]);
+                        }}
                     >
                         <Ionicons name="close" size={32} color="white" />
                     </TouchableOpacity>
-                </View>
 
-                <TouchableOpacity
-                    style={{
-                        position: "absolute", bottom: 20, right: 20,
-                        backgroundColor: "#007DA5", padding: 12, borderRadius: 8,
-                        flexDirection: "row", alignItems: "center",
-                    }}
-                    onPress={handleDoneClick}
-                >
-                    <Ionicons name="checkmark-circle" size={24} color="white" />
-                    <Text style={{ color: "white", fontSize: 16, marginLeft: 5 }}>Done</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        style={{
+                            position: "absolute", bottom: 20, right: 20,
+                            backgroundColor: "#007DA5", padding: 12, borderRadius: 8,
+                            flexDirection: "row", alignItems: "center",
+                        }}
+                        onPress={handleDoneClick}
+                    >
+                        <Ionicons name="checkmark-circle" size={24} color="white" />
+                        <Text style={{ color: "white", fontSize: 16, marginLeft: 5 }}>Done</Text>
+                    </TouchableOpacity>
+                </View>
             </Modal>
 
             <TouchableOpacity
