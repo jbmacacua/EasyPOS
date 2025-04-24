@@ -38,7 +38,7 @@ export default function SalesSummary({ activeTab }) {
         setLoading(true);
         try {
             if (activeTab === 'Daily') {
-                const today = new Date().toISOString().split('T')[0];
+                const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
                 const response = await getMostSoldItemsForDay(userId, businessId, today);
                 handleResponse(response);
             } else if (activeTab === 'Weekly') {

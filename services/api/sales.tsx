@@ -387,8 +387,7 @@ export async function getMostSoldItemsForDay(
                 p_business_id: businessId,  
                 p_date: date
             });
-        console.log(data)
-
+            
         if (error) {
             throw error;
         }
