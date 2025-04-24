@@ -1,73 +1,106 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
-import { getMostSoldItemsForDay, getMostSoldItemsForWeek, getMostSoldItemsForMonth } from '@api/sales';
+import { View, Text, ActivityIndicator } from 'react-native';
+import {
+  getMostSoldItemsForDay,
+  getMostSoldItemsForWeek,
+  getMostSoldItemsForMonth
+} from '@api/sales';
+import { useSession } from '@context/auth';
+import { useIsFocused } from '@react-navigation/native';
 
-
-export default function MostSoldItems({ activeTab, userId, businessId }) {
+export default function MostSoldItems({ activeTab }) {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      let result;
+  const { session, businessId } = useSession();
+  const isFocused = useIsFocused();
+  const userId = session ? JSON.parse(session)?.user?.id : null;
 
-      try {
-        if (!userId || !businessId) throw new Error('Missing user or business ID');
+  const handleResponse = (response) => {
+    if (response.success) {
+      const transformedProducts = response.data.map(item => ({
+        id: item.product_id,
+        name: item.product_name,
+        price: parseFloat(item.product_price),
+        quantity: parseInt(item.total_quantity),
+        total: parseFloat(item.product_price) * parseInt(item.total_quantity),
+      }));
+      setProducts(transformedProducts);
+    } else {
+      console.error("Error fetching most sold items:", response.error);
+      setProducts([]);
+    }
+  };
 
-        if (activeTab === 'Daily') {
-          const today = new Date().toISOString().split('T')[0]; // Get current date as "YYYY-MM-DD"
-          result = await getMostSoldItemsForDay(userId, businessId, today);
-        } else if (activeTab === 'Weekly') {
-          const weekNumber = Math.ceil(new Date().getDate() / 7);
-          result = await getMostSoldItemsForWeek(userId, businessId, weekNumber);
-        } else if (activeTab === 'Monthly') {
-          result = await getMostSoldItemsForMonth(userId, businessId);
-        }
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      if (!userId || !businessId) throw new Error("Missing user or business ID");
 
-        if (result?.success) {
-          const sorted = result.data.sort((a, b) => b.total_quantity_sold - a.total_quantity_sold);
-          setProducts(sorted);
-        } else {
-          console.error(result?.error);
-          setProducts([]);
-        }
-      } catch (err) {
-        console.error('MostSoldItems error:', err);
+      if (activeTab === 'Daily') {
+        const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+        const response = await getMostSoldItemsForDay(userId, businessId, today);
+        handleResponse(response);
+      } else if (activeTab === 'Weekly') {
+        const currentDate = new Date();
+        const currentWeekNumber = Math.ceil(currentDate.getDate() / 7);
+        const response = await getMostSoldItemsForWeek(userId, businessId, currentWeekNumber);
+        handleResponse(response);
+      } else if (activeTab === 'Monthly') {
+        const response = await getMostSoldItemsForMonth(userId, businessId);
+        handleResponse(response);
+      } else {
         setProducts([]);
       }
+    } catch (err) {
+      console.error("Error fetching most sold items:", err);
+      setProducts([]);
+    }
+    setLoading(false);
+  };
 
-      setLoading(false);
-    };
-
+  useEffect(() => {
     fetchData();
-  }, [activeTab]);
+  }, [activeTab, userId, businessId]);
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchData();
+    }
+  }, [isFocused]);
 
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#3C80B4" />
       </View>
     );
   }
 
   return (
-    <View className="flex-1">
-      <View className="p-5 bg-white rounded-lg shadow-md">
-        <Text className="text-xl font-bold mb-3 text-[#3C80B4]">Most Sold Items</Text>
-        <ScrollView>
-          {products.slice(0, 10).map((item, index) => (
-            <View
-              key={item.product_id}
-              className={`flex-row justify-between items-center pr-3 pl-3 pb-2 pt-2 ${
-                index % 2 === 0 ? 'bg-[#3C80B4]' : 'bg-[#3F89C1]'
-              }`}
-            >
-              <Text className="text-[12px] font-medium text-white">{item.product_name}</Text>
-              <Text className="text-[12px] font-medium text-white">{item.total_quantity_sold} sold</Text>
-            </View>
-          ))}
-        </ScrollView>
+    <View className="flex-1 p-4 bg-gray-100 rounded-lg">
+      <Text className="text-2xl font-bold text-[#3C80B4] mb-4">
+        Most Sold Items ({activeTab})
+      </Text>
+
+      <View className="w-full border border-gray-300 rounded-lg overflow-hidden">
+        <View className="flex-row bg-[#1C547E] p-2">
+          <Text className="flex-1 font-bold text-white text-center">Product</Text>
+          <Text className="w-20 font-bold text-white text-center">Price</Text>
+          <Text className="w-20 font-bold text-white text-center">Quantity</Text>
+          <Text className="w-20 font-bold text-white text-center">Total</Text>
+        </View>
+        {products.map((item, index) => (
+          <View
+            key={item.id}
+            className={`flex-row flex-wrap items-center p-2 ${index % 2 === 0 ? 'bg-blue-200' : 'bg-blue-100'}`}
+          >
+            <Text className="flex-1 text-black text-center">{item.name}</Text>
+            <Text className="w-20 text-black text-center">{item.price.toFixed(2)}</Text>
+            <Text className="w-20 text-black text-center">{item.quantity}</Text>
+            <Text className="w-20 text-black text-center">{(item.price * item.quantity).toFixed(2)}</Text>
+          </View>
+        ))}
       </View>
     </View>
   );

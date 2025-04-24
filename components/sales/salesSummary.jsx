@@ -16,8 +16,6 @@ export default function SalesSummary({ activeTab }) {
     const isFocused = useIsFocused();
     const userId = session ? JSON.parse(session)?.user?.id : null;
 
-    const totalOverall = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
-
     const handleResponse = (response) => {
         if (response.success) {
             const transformedProducts = response.data.map(item => ({
@@ -101,10 +99,6 @@ export default function SalesSummary({ activeTab }) {
                         <Text className="w-20 text-black text-center">{(item.price * item.quantity).toFixed(2)}</Text>
                     </View>
                 ))}
-                <View className="flex-row bg-white p-2">
-                    <Text className="flex-1 font-bold text-black text-right">Total</Text>
-                    <Text className="w-20 font-bold text-black text-center">{totalOverall.toFixed(2)}</Text>
-                </View>
             </View>
         </View>
     );
