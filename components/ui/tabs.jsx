@@ -1,8 +1,11 @@
 import React from "react";
 import { TouchableOpacity, Text, View } from "react-native";
+import { useSession } from "@context/auth"; // <-- useSession instead of useAuth
 
 const Tabs = ({ activeTab, setActiveTab }) => {
-  const tabs = ["Daily", "Weekly", "Monthly"];
+    const { userRole } = useSession(); // <-- useSession hook here
+
+  const tabs = userRole === 'sales' ? ['Daily'] : ['Daily', 'Weekly', 'Monthly'];
 
   return (
     <View className="flex-row justify-center mb-4">
